@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wear Floral
+
+Elegant desi women's clothing e-commerce storefront with a full admin dashboard.
+
+## Features
+
+### Customer Storefront
+- Landing page with hero, categories, new arrivals, best sellers, newsletter
+- Shop with filters (category, price, size, color, brand) and sorting
+- Product detail pages with image gallery, size/color picker, add to cart
+- Cart drawer and dedicated cart/checkout pages
+- Fully responsive mobile-first design with white/rose theme
+
+### Admin Dashboard (`/admin`)
+- Password-protected owner panel (demo password: `wearfloral2024`)
+- Overview: revenue stats, recent orders, sparkline chart
+- Products: add, edit, delete inventory
+- Orders: filter by status, view details, update status
+- Inventory: stock levels with low-stock alerts
+- Revenue: charts by day/week/month and by category
+
+## Tech Stack
+
+- **Next.js 14** (App Router)
+- **Tailwind CSS** + **shadcn/ui**
+- **Lucide React** icons
+- **Recharts** for admin analytics
+- **Mock data** in `lib/mock-data.ts` (ready for Supabase swap)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) for the store.
+Open [http://localhost:3000/admin](http://localhost:3000/admin) for the dashboard.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push this repo to [GitHub](https://github.com/moazzam71005/wearfloral)
+2. Import the repo on [Vercel](https://vercel.com)
+3. Deploy (no env vars needed for mock data)
 
-## Learn More
+## Future: Supabase Integration
 
-To learn more about Next.js, take a look at the following resources:
+Replace data calls in `lib/mock-data.ts` with Supabase client queries. Suggested tables:
+- `products`, `orders`, `order_items`, `inventory`, `users`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Supabase free tier works well for this project alongside Vercel's free hosting.
