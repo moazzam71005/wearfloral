@@ -8,53 +8,111 @@ import {
   useMemo,
   useState,
 } from "react";
-import { ADMIN_PASSWORD } from "@/lib/constants";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 interface AdminAuthContextValue {
   isAuthenticated: boolean;
-  login: (password: string) => boolean;
-  logout: () => void;
+  isLoading: boolean;
+  user: User | null;
+  error: string;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
-const AUTH_STORAGE_KEY = "wearfloral-admin-auth";
+function isAdminUser(user: User): boolean {
+  // Check user_metadata.is_admin (set from Supabase Auth dashboard)
+  // OR app_metadata.role === "admin" (set via service-role key / SQL)
+  return (
+    user.user_metadata?.is_admin === true ||
+    user.app_metadata?.role === "admin"
+  );
+}
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    // Check existing session on mount
+    supabase.auth.getSession().then(({ data }) => {
+      const sessionUser = data.session?.user ?? null;
+      if (sessionUser && isAdminUser(sessionUser)) {
+        setUser(sessionUser);
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const sessionUser = session?.user ?? null;
+      if (sessionUser && isAdminUser(sessionUser)) {
+        setUser(sessionUser);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    setError("");
+    setIsLoading(true);
     try {
-      const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
-      setIsAuthenticated(stored === "true");
-    } catch {
-      // ignore
-    }
-    setHydrated(true);
-  }, []);
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-  const login = useCallback((password: string) => {
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
+      if (authError) {
+        setError(authError.message);
+        setIsLoading(false);
+        return false;
+      }
+
+      const loggedInUser = data.user;
+      if (!loggedInUser) {
+        setError("Login failed. Please try again.");
+        setIsLoading(false);
+        return false;
+      }
+
+      if (!isAdminUser(loggedInUser)) {
+        await supabase.auth.signOut();
+        setError("Access denied. This account does not have admin privileges.");
+        setIsLoading(false);
+        return false;
+      }
+
+      setUser(loggedInUser);
+      setIsLoading(false);
       return true;
+    } catch {
+      setError("An unexpected error occurred.");
+      setIsLoading(false);
+      return false;
     }
-    return false;
   }, []);
 
-  const logout = useCallback(() => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
   }, []);
 
   const value = useMemo(
     () => ({
-      isAuthenticated: hydrated ? isAuthenticated : false,
+      isAuthenticated: !!user,
+      isLoading,
+      user,
+      error,
       login,
       logout,
     }),
-    [hydrated, isAuthenticated, login, logout]
+    [user, isLoading, error, login, logout]
   );
 
   return (

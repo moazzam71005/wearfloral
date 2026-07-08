@@ -6,6 +6,7 @@ import { useAdminAuth } from "@/context/AdminAuthContext";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Loader2 } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
   "/admin": "Dashboard",
@@ -20,29 +21,29 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAdminAuth();
+  const { isAuthenticated, isLoading } = useAdminAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    if (!isAuthenticated && !isLoginPage) {
+    if (!isLoading && !isAuthenticated && !isLoginPage) {
       router.replace("/admin/login");
     }
-  }, [isAuthenticated, isLoginPage, router]);
+  }, [isAuthenticated, isLoading, isLoginPage, router]);
 
-  if (isLoginPage) {
-    return <>{children}</>;
-  }
+  if (isLoginPage) return <>{children}</>;
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-rose-400 border-t-transparent" />
+        <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
       </div>
     );
   }
+
+  if (!isAuthenticated) return null;
 
   const title = pageTitles[pathname] || "Admin";
 
@@ -61,3 +62,5 @@ export default function AdminLayout({
     </div>
   );
 }
+
+

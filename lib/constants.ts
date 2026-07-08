@@ -2,6 +2,9 @@ import type { Category } from "./types";
 
 export const STORE_NAME = "Wear Floral";
 export const STORE_TAGLINE = "Elegant Desi Fashion for the Modern Woman";
+export const STORE_EMAIL = "saleswearfloral@gmail.com";
+export const STORE_PHONE = "+92 300 0000000";
+export const STORE_LOCATION = "Lahore, Pakistan";
 
 export const CATEGORIES: {
   name: Category;
@@ -14,35 +17,35 @@ export const CATEGORIES: {
     slug: "lawn",
     description: "Breathable printed lawn suits",
     image:
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
+      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&q=80",
   },
   {
     name: "Kurtis",
     slug: "kurtis",
     description: "Stylish everyday kurtis",
     image:
-      "https://images.unsplash.com/photo-1583391735907-6086b78f87e1?w=600&q=80",
+      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&q=80",
   },
   {
     name: "Shalwar Kameez",
     slug: "shalwar-kameez",
     description: "Classic festive ensembles",
     image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80",
+      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
   },
   {
     name: "Dupattas",
     slug: "dupattas",
     description: "Embroidered & chiffon dupattas",
     image:
-      "https://images.unsplash.com/photo-1558172043-35e9e907e3cb?w=600&q=80",
+      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
   },
   {
     name: "Accessories",
     slug: "accessories",
     description: "Bags, jewelry & more",
     image:
-      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=600&q=80",
+      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
   },
 ];
 
@@ -69,8 +72,6 @@ export const BRANDS = [
   "Alkaram",
   "Wear Floral",
 ] as const;
-
-export const ADMIN_PASSWORD = "wearfloral2024";
 
 export const FREE_SHIPPING_THRESHOLD = 5000;
 export const SHIPPING_FEE = 250;

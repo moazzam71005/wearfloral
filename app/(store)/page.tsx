@@ -4,7 +4,7 @@ import { useData } from "@/context/DataContext";
 import { Hero } from "@/components/store/Hero";
 import { CategoryCards } from "@/components/store/CategoryCards";
 import { ProductRow, ProductGrid } from "@/components/store/ProductRow";
-import { SearchBar } from "@/components/store/SearchBar";
+import { PromoBanner } from "@/components/store/PromoBanner";
 import { Newsletter } from "@/components/store/Newsletter";
 
 export default function HomePage() {
@@ -16,16 +16,23 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <SearchBar sticky />
       <CategoryCards />
       <ProductRow
-        title="New Arrivals"
-        subtitle="Fresh styles just landed"
+        title="New In"
+        label="Fresh Arrivals"
         products={newArrivals}
         viewAllHref="/shop?filter=new"
       />
-      <ProductGrid title="Best Sellers" products={bestSellers} />
+      <PromoBanner />
+      <ProductGrid
+        title="Best Sellers"
+        label="Customer Favourites"
+        products={bestSellers}
+        viewAllHref="/shop?filter=bestseller"
+      />
       <Newsletter />
     </>
   );
 }
+
+

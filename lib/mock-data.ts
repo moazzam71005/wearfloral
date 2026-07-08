@@ -7,6 +7,22 @@ import type {
   RevenueDataPoint,
 } from "./types";
 
+// Reliable Unsplash photo IDs for desi fashion
+const IMG = {
+  lawn1: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&q=80",
+  lawn2: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80",
+  kurti1: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&q=80",
+  kurti2: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80",
+  sk1: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
+  sk2: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=800&q=80",
+  dupatta1: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
+  dupatta2: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
+  acc1: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
+  acc2: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80",
+  fashion1: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&q=80",
+  fashion2: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80",
+};
+
 export const mockProducts: Product[] = [
   {
     id: "prod-1",
@@ -21,10 +37,7 @@ export const mockProducts: Product[] = [
     brand: "Sapphire",
     price: 4500,
     compareAtPrice: 5500,
-    images: [
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&q=80",
-      "https://images.unsplash.com/photo-1558172043-35e9e907e3cb?w=800&q=80",
-    ],
+    images: [IMG.lawn1, IMG.lawn2],
     colors: ["Pink", "White", "Green"],
     sizes: ["S", "M", "L", "XL"],
     stock: 24,
@@ -48,10 +61,7 @@ export const mockProducts: Product[] = [
     category: "Dupattas",
     brand: "Maria B",
     price: 2800,
-    images: [
-      "https://images.unsplash.com/photo-1558172043-35e9e907e3cb?w=800&q=80",
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
-    ],
+    images: [IMG.dupatta1, IMG.dupatta2],
     colors: ["Gold", "Maroon", "Navy"],
     sizes: ["One Size"],
     stock: 18,
@@ -76,10 +86,7 @@ export const mockProducts: Product[] = [
     brand: "Khaadi",
     price: 8900,
     compareAtPrice: 10500,
-    images: [
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
-      "https://images.unsplash.com/photo-1583391735907-6086b78f87e1?w=800&q=80",
-    ],
+    images: [IMG.sk1, IMG.sk2],
     colors: ["Maroon", "Navy", "Black"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     stock: 12,
@@ -103,10 +110,7 @@ export const mockProducts: Product[] = [
     category: "Kurtis",
     brand: "Alkaram",
     price: 3200,
-    images: [
-      "https://images.unsplash.com/photo-1583391735907-6086b78f87e1?w=800&q=80",
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&q=80",
-    ],
+    images: [IMG.kurti1, IMG.kurti2],
     colors: ["Blue", "Beige", "White"],
     sizes: ["XS", "S", "M", "L", "XL"],
     stock: 30,
@@ -131,10 +135,7 @@ export const mockProducts: Product[] = [
     brand: "Maria B",
     price: 12500,
     compareAtPrice: 15000,
-    images: [
-      "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=800&q=80",
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
-    ],
+    images: [IMG.fashion1, IMG.sk1],
     colors: ["Gold", "Pink", "Green"],
     sizes: ["S", "M", "L", "XL"],
     stock: 8,
@@ -158,10 +159,7 @@ export const mockProducts: Product[] = [
     category: "Kurtis",
     brand: "Gul Ahmed",
     price: 2200,
-    images: [
-      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80",
-      "https://images.unsplash.com/photo-1583391735907-6086b78f87e1?w=800&q=80",
-    ],
+    images: [IMG.kurti2, IMG.kurti1],
     colors: ["White", "Black", "Red"],
     sizes: ["S", "M", "L", "XL"],
     stock: 45,
@@ -185,10 +183,7 @@ export const mockProducts: Product[] = [
     category: "Lawn",
     brand: "Gul Ahmed",
     price: 5200,
-    images: [
-      "https://images.unsplash.com/photo-1558172043-35e9e907e3cb?w=800&q=80",
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&q=80",
-    ],
+    images: [IMG.lawn2, IMG.lawn1],
     colors: ["Green", "Blue", "Pink"],
     sizes: ["S", "M", "L", "XL"],
     stock: 3,
@@ -212,10 +207,7 @@ export const mockProducts: Product[] = [
     category: "Dupattas",
     brand: "Wear Floral",
     price: 3500,
-    images: [
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
-      "https://images.unsplash.com/photo-1558172043-35e9e907e3cb?w=800&q=80",
-    ],
+    images: [IMG.dupatta2, IMG.dupatta1],
     colors: ["Red", "Maroon", "Gold"],
     sizes: ["One Size"],
     stock: 15,
@@ -239,10 +231,7 @@ export const mockProducts: Product[] = [
     category: "Accessories",
     brand: "Wear Floral",
     price: 1800,
-    images: [
-      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
-      "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=800&q=80",
-    ],
+    images: [IMG.acc1, IMG.acc2],
     colors: ["Gold", "Silver", "Pink"],
     sizes: ["One Size"],
     stock: 22,
@@ -266,10 +255,7 @@ export const mockProducts: Product[] = [
     category: "Accessories",
     brand: "Wear Floral",
     price: 950,
-    images: [
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80",
-      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
-    ],
+    images: [IMG.acc2, IMG.acc1],
     colors: ["Gold", "Silver"],
     sizes: ["One Size"],
     stock: 50,
@@ -293,10 +279,7 @@ export const mockProducts: Product[] = [
     category: "Kurtis",
     brand: "Sapphire",
     price: 3800,
-    images: [
-      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80",
-      "https://images.unsplash.com/photo-1583391735907-6086b78f87e1?w=800&q=80",
-    ],
+    images: [IMG.kurti2, IMG.fashion2],
     colors: ["Beige", "White", "Blue"],
     sizes: ["S", "M", "L", "XL"],
     stock: 16,
@@ -320,10 +303,7 @@ export const mockProducts: Product[] = [
     category: "Dupattas",
     brand: "Alkaram",
     price: 4200,
-    images: [
-      "https://images.unsplash.com/photo-1558172043-35e9e907e3cb?w=800&q=80",
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80",
-    ],
+    images: [IMG.dupatta1, IMG.fashion1],
     colors: ["Maroon", "Navy", "Black"],
     sizes: ["One Size"],
     stock: 2,
@@ -349,7 +329,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-1",
         name: "Floral Lawn 3-Piece Suit",
-        image: mockProducts[0].images[0],
+        image: IMG.lawn1,
         price: 4500,
         size: "M",
         color: "Pink",
@@ -374,7 +354,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-3",
         name: "Classic Shalwar Kameez Set",
-        image: mockProducts[2].images[0],
+        image: IMG.sk1,
         price: 8900,
         size: "L",
         color: "Maroon",
@@ -383,7 +363,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-8",
         name: "Silk Thread Dupatta",
-        image: mockProducts[7].images[0],
+        image: IMG.dupatta2,
         price: 3500,
         size: "One Size",
         color: "Red",
@@ -408,7 +388,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-4",
         name: "Printed Kurti with Palazzo",
-        image: mockProducts[3].images[0],
+        image: IMG.kurti1,
         price: 3200,
         size: "S",
         color: "Blue",
@@ -433,7 +413,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-6",
         name: "Casual Cotton Kurti",
-        image: mockProducts[5].images[0],
+        image: IMG.kurti2,
         price: 2200,
         size: "M",
         color: "White",
@@ -458,7 +438,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-5",
         name: "Festive Organza Suit",
-        image: mockProducts[4].images[0],
+        image: IMG.fashion1,
         price: 12500,
         size: "M",
         color: "Gold",
@@ -483,7 +463,7 @@ export const mockOrders: Order[] = [
       {
         productId: "prod-10",
         name: "Pearl Drop Earrings",
-        image: mockProducts[9].images[0],
+        image: IMG.acc2,
         price: 950,
         size: "One Size",
         color: "Gold",
