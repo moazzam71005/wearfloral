@@ -9,14 +9,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { CategoryRevenue } from "@/lib/types";
+import type { BrandRevenue } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
 
-interface CategoryRevenueChartProps {
-  data: CategoryRevenue[];
+interface BrandRevenueChartProps {
+  data: BrandRevenue[];
 }
 
-export function CategoryRevenueChart({ data }: CategoryRevenueChartProps) {
+export function BrandRevenueChart({ data }: BrandRevenueChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-stone-400">
+        No revenue data yet
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={320}>
       <BarChart data={data} layout="vertical">
@@ -28,20 +36,13 @@ export function CategoryRevenueChart({ data }: CategoryRevenueChartProps) {
         />
         <YAxis
           type="category"
-          dataKey="category"
+          dataKey="brand"
           tick={{ fontSize: 12, fill: "#78716c" }}
-          width={120}
+          width={100}
         />
         <Tooltip
-          formatter={(value) => [
-            formatCurrency(Number(value ?? 0)),
-            "Revenue",
-          ]}
-          contentStyle={{
-            borderRadius: "8px",
-            border: "1px solid #e7e5e4",
-            fontSize: "13px",
-          }}
+          formatter={(value) => [formatCurrency(Number(value ?? 0)), "Revenue"]}
+          contentStyle={{ borderRadius: "8px", border: "1px solid #e7e5e4", fontSize: "13px" }}
         />
         <Bar dataKey="revenue" fill="#fb7185" radius={[0, 4, 4, 0]} />
       </BarChart>

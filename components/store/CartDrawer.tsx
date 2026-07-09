@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/format";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/constants";
@@ -16,14 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 export function CartDrawer() {
-  const {
-    items,
-    subtotal,
-    isOpen,
-    closeCart,
-    updateQuantity,
-    removeItem,
-  } = useCart();
+  const { items, subtotal, isOpen, closeCart, removeItem } = useCart();
 
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + (items.length > 0 ? shipping : 0);
@@ -50,73 +43,23 @@ export function CartDrawer() {
           <>
             <div className="flex-1 overflow-y-auto py-4 space-y-4">
               {items.map((item) => (
-                <div
-                  key={`${item.productId}-${item.size}-${item.color}`}
-                  className="flex gap-3"
-                >
+                <div key={item.productId} className="flex gap-3">
                   <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-stone-100">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                   </div>
                   <div className="flex flex-1 flex-col">
-                    <h4 className="text-sm font-medium line-clamp-2">
-                      {item.name}
-                    </h4>
-                    <p className="text-xs text-stone-500">
-                      {item.size} / {item.color}
-                    </p>
+                    <h4 className="text-sm font-medium line-clamp-2">{item.name}</h4>
                     <p className="mt-1 text-sm font-semibold">
-                      {formatCurrency(item.price)}
+                      {formatCurrency(item.discountPrice)}
                     </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() =>
-                          updateQuantity(
-                            item.productId,
-                            item.size,
-                            item.color,
-                            item.quantity - 1
-                          )
-                        }
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-6 text-center text-sm">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() =>
-                          updateQuantity(
-                            item.productId,
-                            item.size,
-                            item.color,
-                            item.quantity + 1
-                          )
-                        }
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-auto h-7 w-7 text-stone-400 hover:text-red-500"
-                        onClick={() =>
-                          removeItem(item.productId, item.size, item.color)
-                        }
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-auto w-fit text-stone-400 hover:text-red-500 p-0 h-auto"
+                      onClick={() => removeItem(item.productId)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -129,14 +72,11 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-500">Shipping</span>
-                <span>
-                  {shipping === 0 ? "Free" : formatCurrency(shipping)}
-                </span>
+                <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
               </div>
               {subtotal < FREE_SHIPPING_THRESHOLD && (
                 <p className="text-xs text-rose-500">
-                  Add {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} more
-                  for free shipping
+                  Add {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} more for free shipping
                 </p>
               )}
               <Separator />
@@ -144,17 +84,11 @@ export function CartDrawer() {
                 <span>Total</span>
                 <span>{formatCurrency(total)}</span>
               </div>
-              <Button
-                className="w-full bg-rose-400 hover:bg-rose-500 text-white"
-                asChild
-                onClick={closeCart}
-              >
+              <Button className="w-full bg-rose-500 hover:bg-rose-600 text-white" asChild onClick={closeCart}>
                 <Link href="/checkout">Checkout</Link>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/cart" onClick={closeCart}>
-                  View Cart
-                </Link>
+                <Link href="/cart" onClick={closeCart}>View Cart</Link>
               </Button>
             </div>
           </>

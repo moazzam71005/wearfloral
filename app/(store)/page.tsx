@@ -1,38 +1,52 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Hero } from "@/components/store/Hero";
-import { CategoryCards } from "@/components/store/CategoryCards";
-import { ProductRow, ProductGrid } from "@/components/store/ProductRow";
-import { PromoBanner } from "@/components/store/PromoBanner";
+import { BrandCards } from "@/components/store/BrandCards";
+import { ProductRow } from "@/components/store/ProductRow";
 import { Newsletter } from "@/components/store/Newsletter";
+import { BRANDS } from "@/lib/constants";
 
 export default function HomePage() {
-  const { products } = useData();
+  const { products, isLoading } = useData();
 
-  const newArrivals = products.filter((p) => p.isNewArrival);
-  const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 8);
+  const brandsWithProducts = BRANDS.filter((brand) =>
+    products.some((p) => p.brand === brand)
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
+      </div>
+    );
+  }
 
   return (
     <>
       <Hero />
-      <CategoryCards />
-      <ProductRow
-        title="New In"
-        label="Fresh Arrivals"
-        products={newArrivals}
-        viewAllHref="/shop?filter=new"
-      />
-      <PromoBanner />
-      <ProductGrid
-        title="Best Sellers"
-        label="Customer Favourites"
-        products={bestSellers}
-        viewAllHref="/shop?filter=bestseller"
-      />
+      <BrandCards products={products} />
+      {brandsWithProducts.map((brand) => {
+        const brandProducts = products.filter((p) => p.brand === brand);
+        if (brandProducts.length === 0) return null;
+        return (
+          <ProductRow
+            key={brand}
+            title={brand}
+            label="Brand Collection"
+            products={brandProducts}
+            viewAllHref={`/shop?brand=${encodeURIComponent(brand)}`}
+          />
+        );
+      })}
+      {products.length === 0 && (
+        <div className="py-20 text-center text-stone-500">
+          <p className="text-lg">New fabrics coming soon!</p>
+          <p className="mt-2 text-sm">Check back for our latest unstitched collections.</p>
+        </div>
+      )}
       <Newsletter />
     </>
   );
 }
-
-

@@ -1,44 +1,32 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-// Lazy singleton — only created when env vars are present (at runtime, not at build time)
-let _client: ReturnType<typeof createClient> | null = null;
+let _client: SupabaseClient | null = null;
 
-export function getSupabaseClient() {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Return a no-op proxy during build / when env vars are not configured
-    return null;
-  }
+export function getSupabaseClient(): SupabaseClient {
   if (!_client) {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error(
+        "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local"
+      );
+    }
     _client = createClient(supabaseUrl, supabaseAnonKey);
   }
   return _client;
 }
 
-// Convenience export — same pattern, returns null if not configured
-export const supabase = {
-  auth: {
-    getSession: async () => {
-      const client = getSupabaseClient();
-      if (!client) return { data: { session: null }, error: null };
-      return client.auth.getSession();
-    },
-    signInWithPassword: async (credentials: { email: string; password: string }) => {
-      const client = getSupabaseClient();
-      if (!client) return { data: { user: null }, error: new Error("Supabase not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local") };
-      return client.auth.signInWithPassword(credentials);
-    },
-    signOut: async () => {
-      const client = getSupabaseClient();
-      if (!client) return { error: null };
-      return client.auth.signOut();
-    },
-    onAuthStateChange: (callback: Parameters<ReturnType<typeof createClient>["auth"]["onAuthStateChange"]>[0]) => {
-      const client = getSupabaseClient();
-      if (!client) return { data: { subscription: { unsubscribe: () => {} } } };
-      return client.auth.onAuthStateChange(callback);
-    },
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return getSupabaseClient()[prop as keyof SupabaseClient];
   },
-};
+});
+
+export function getProductImageUrl(imagePath: string): string {
+  if (!imagePath) return "/placeholder-product.png";
+  if (imagePath.startsWith("http")) return imagePath;
+  const client = getSupabaseClient();
+  const { data } = client.storage.from("product-images").getPublicUrl(imagePath);
+  return data.publicUrl;
+}

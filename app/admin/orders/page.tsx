@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useData } from "@/context/DataContext";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { calcProfit } from "@/lib/types";
 import type { Order, OrderStatus } from "@/lib/types";
 import { OrdersTable } from "@/components/admin/OrdersTable";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -24,28 +24,20 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 const statuses: (OrderStatus | "All")[] = [
-  "All",
-  "Pending",
-  "Processing",
-  "Shipped",
-  "Delivered",
-  "Cancelled",
+  "All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled",
 ];
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus } = useData();
+  const { orders, updateOrderStatus, refreshOrders } = useData();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "All">("All");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const filtered =
-    statusFilter === "All"
-      ? orders
-      : orders.filter((o) => o.status === statusFilter);
+  useEffect(() => {
+    refreshOrders();
+  }, [refreshOrders]);
 
-  const sorted = [...filtered].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const filtered = statusFilter === "All" ? orders : orders.filter((o) => o.status === statusFilter);
+  const sorted = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="space-y-6">
@@ -55,29 +47,17 @@ export default function AdminOrdersPage() {
             key={status}
             variant={statusFilter === status ? "default" : "outline"}
             size="sm"
-            className={
-              statusFilter === status
-                ? "bg-rose-400 hover:bg-rose-500 text-white"
-                : ""
-            }
+            className={statusFilter === status ? "bg-rose-500 hover:bg-rose-600 text-white" : ""}
             onClick={() => setStatusFilter(status)}
           >
             {status}
-            {status !== "All" && (
-              <Badge variant="secondary" className="ml-2 bg-white/20">
-                {orders.filter((o) => o.status === status).length}
-              </Badge>
-            )}
           </Button>
         ))}
       </div>
 
       <OrdersTable orders={sorted} onSelect={setSelectedOrder} />
 
-      <Sheet
-        open={!!selectedOrder}
-        onOpenChange={(open) => !open && setSelectedOrder(null)}
-      >
+      <Sheet open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           {selectedOrder && (
             <>
@@ -89,26 +69,17 @@ export default function AdminOrdersPage() {
                   <p className="text-sm font-medium text-stone-500">Status</p>
                   <Select
                     value={selectedOrder.status}
-                    onValueChange={(v) => {
+                    onValueChange={async (v) => {
                       if (!v) return;
-                      updateOrderStatus(selectedOrder.id, v as OrderStatus);
-                      setSelectedOrder({
-                        ...selectedOrder,
-                        status: v as OrderStatus,
-                      });
+                      await updateOrderStatus(selectedOrder.id, v as OrderStatus);
+                      setSelectedOrder({ ...selectedOrder, status: v as OrderStatus });
                     }}
                   >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {statuses
-                        .filter((s) => s !== "All")
-                        .map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
+                      {statuses.filter((s) => s !== "All").map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -116,47 +87,30 @@ export default function AdminOrdersPage() {
                 <div>
                   <p className="text-sm font-medium text-stone-500">Customer</p>
                   <p className="mt-1">{selectedOrder.customerName}</p>
-                  <p className="text-sm text-stone-500">
-                    {selectedOrder.customerEmail}
-                  </p>
-                  <p className="text-sm text-stone-500">
-                    {selectedOrder.customerPhone}
-                  </p>
+                  <p className="text-sm text-stone-500">{selectedOrder.customerEmail}</p>
+                  <p className="text-sm text-stone-500">{selectedOrder.customerPhone}</p>
                 </div>
 
                 <div>
                   <p className="text-sm font-medium text-stone-500">Shipping</p>
-                  <p className="mt-1 text-sm">
-                    {selectedOrder.shippingAddress}
-                  </p>
+                  <p className="mt-1 text-sm">{selectedOrder.shippingAddress}</p>
                   <p className="text-sm">{selectedOrder.city}</p>
                 </div>
 
                 <Separator />
 
                 <div>
-                  <p className="text-sm font-medium text-stone-500 mb-3">
-                    Items
-                  </p>
-                  {selectedOrder.items.map((item, i) => (
-                    <div key={i} className="flex gap-3 mb-3">
+                  <p className="text-sm font-medium text-stone-500 mb-3">Items</p>
+                  {selectedOrder.items.map((item) => (
+                    <div key={item.productId} className="flex gap-3 mb-3">
                       <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded bg-stone-100">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                       </div>
                       <div className="flex-1 text-sm">
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-stone-500">
-                          {item.size} / {item.color} x{item.quantity}
-                        </p>
+                        <p className="text-stone-500">{item.brand} · {item.volume}</p>
                       </div>
-                      <p className="text-sm font-medium">
-                        {formatCurrency(item.price * item.quantity)}
-                      </p>
+                      <p className="text-sm font-medium">{formatCurrency(item.discountPrice)}</p>
                     </div>
                   ))}
                 </div>
@@ -170,21 +124,21 @@ export default function AdminOrdersPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-500">Shipping</span>
-                    <span>
-                      {selectedOrder.shipping === 0
-                        ? "Free"
-                        : formatCurrency(selectedOrder.shipping)}
-                    </span>
+                    <span>{selectedOrder.shipping === 0 ? "Free" : formatCurrency(selectedOrder.shipping)}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
                     <span>{formatCurrency(selectedOrder.total)}</span>
                   </div>
+                  <div className="flex justify-between text-green-600">
+                    <span>Profit</span>
+                    <span>{formatCurrency(
+                      selectedOrder.items.reduce((s, i) => s + calcProfit(i.discountPrice, i.purchasePrice), 0)
+                    )}</span>
+                  </div>
                 </div>
 
-                <p className="text-xs text-stone-400">
-                  Placed: {formatDateTime(selectedOrder.createdAt)}
-                </p>
+                <p className="text-xs text-stone-400">Placed: {formatDateTime(selectedOrder.createdAt)}</p>
               </div>
             </>
           )}
@@ -193,5 +147,3 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
-
-

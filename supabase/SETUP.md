@@ -3,63 +3,50 @@
 ## 1. Create a Supabase Project
 
 1. Go to [supabase.com](https://supabase.com) → New Project
-2. Choose a name, set a database password, pick a region close to Pakistan (e.g. Singapore)
+2. Choose a name, set a database password, pick a region close to Pakistan
 
-## 2. Run the Migration
+## 2. Run Migrations (in order)
 
-1. In your Supabase project → **SQL Editor** → **New query**
-2. Paste the contents of `supabase/migrations/001_schema.sql`
-3. Click **Run**
+1. **SQL Editor** → New query → paste `supabase/migrations/001_schema.sql` → Run
+2. **SQL Editor** → New query → paste `supabase/migrations/002_revamp.sql` → Run
 
-## 3. Add Your Admin User
+> Migration 002 drops and recreates tables with the new unstitched-fabric schema.
 
-1. Go to **Authentication → Users → Add user**
-2. Enter email: `saleswearfloral@gmail.com` and a strong password
-3. After creating, click the user → **Edit** → add this to **User Metadata**:
+## 3. Add Admin User
+
+1. **Authentication → Users → Add user**
+2. Email: `saleswearfloral@gmail.com` + strong password
+3. Edit user → **User Metadata**:
 
 ```json
-{
-  "is_admin": true
-}
+{ "is_admin": true }
 ```
 
-> The frontend checks `user_metadata.is_admin === true` on login.
-> You can also set `app_metadata.role = "admin"` via the SQL editor for extra security.
+## 4. Configure Environment
 
-## 4. Set Metadata via SQL (alternative/additional)
-
-```sql
--- Replace <user-id> with the UUID shown in Authentication → Users
-update auth.users
-set raw_user_meta_data = raw_user_meta_data || '{"is_admin": true}'::jsonb
-where id = '<user-id>';
-```
-
-## 5. Configure Environment Variables
-
-Copy `.env.local.example` to `.env.local` and fill in:
+Copy `.env.local.example` to `.env.local`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Find these in: **Settings → API → Project URL** and **anon public key**.
+## 5. Storage Bucket
 
-## 6. Test Login
+Migration 002 creates the `product-images` bucket automatically. Verify in **Storage** that it exists and is public.
 
-Run `npm run dev`, go to `/admin/login`, and sign in with your admin email and password.
+## 6. Test
 
----
+- Store: `npm run dev` → browse `/shop` (empty until admin adds products)
+- Admin: `/admin/login` with admin credentials
+- Customer: sign up at `/signup`, add items to cart, checkout at `/checkout`
 
-## Tables Created
+## Tables
 
 | Table | Purpose |
 |---|---|
-| `products` | Product catalogue (read-public, write-admin) |
-| `orders` | Customer orders (admin only) |
-| `order_items` | Line items per order |
-| `inventory` | Stock levels per product/size |
-| `customers` | Customer records |
-
-All tables use Row Level Security (RLS). Admin access is granted to users with `user_metadata.is_admin = true`.
+| `products` | Unstitched fabric pieces (unique, one-of-a-kind) |
+| `profiles` | Customer name, phone, address, city |
+| `orders` | Customer orders with status tracking |
+| `order_items` | Line items per order (with purchase price for profit) |
+| `product-images` (storage) | Product photos uploaded by admin |

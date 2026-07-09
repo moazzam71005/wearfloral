@@ -1,10 +1,3 @@
-export type Category =
-  | "Lawn"
-  | "Kurtis"
-  | "Shalwar Kameez"
-  | "Dupattas"
-  | "Accessories";
-
 export type OrderStatus =
   | "Pending"
   | "Processing"
@@ -14,51 +7,52 @@ export type OrderStatus =
 
 export interface Product {
   id: string;
+  productCode: string;
   name: string;
-  slug: string;
-  description: string;
-  material: string;
-  care: string;
-  shipping: string;
-  category: Category;
   brand: string;
-  price: number;
-  compareAtPrice?: number;
-  images: string[];
-  colors: string[];
-  sizes: string[];
-  stock: number;
-  lowStockThreshold: number;
-  sku: string;
-  isNewArrival: boolean;
-  isBestSeller: boolean;
-  rating: number;
-  reviewCount: number;
+  volume: string;
+  description: string;
+  imagePath: string;
+  imageUrl: string;
+  displayPrice: number;
+  discountPrice: number;
+  purchasePrice: number;
+  isSold: boolean;
   createdAt: string;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+  email?: string;
+  createdAt?: string;
 }
 
 export interface CartItem {
   productId: string;
   name: string;
-  image: string;
-  price: number;
-  size: string;
-  color: string;
-  quantity: number;
+  imageUrl: string;
+  discountPrice: number;
+  displayPrice: number;
 }
 
 export interface OrderItem {
   productId: string;
   name: string;
-  image: string;
-  price: number;
-  size: string;
-  color: string;
-  quantity: number;
+  imageUrl: string;
+  brand: string;
+  volume: string;
+  displayPrice: number;
+  discountPrice: number;
+  purchasePrice: number;
 }
 
 export interface Order {
   id: string;
+  customerId: string;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -73,42 +67,48 @@ export interface Order {
   updatedAt: string;
 }
 
-export interface InventoryItem {
-  id: string;
-  productId: string;
-  productName: string;
-  sku: string;
-  size: string;
-  stock: number;
-  lowStockThreshold: number;
+export interface CustomerWithStats extends Profile {
+  orderCount: number;
+  totalSpent: number;
 }
 
 export interface RevenueDataPoint {
   date: string;
   revenue: number;
+  profit: number;
   orders: number;
 }
 
-export interface CategoryRevenue {
-  category: Category;
+export interface BrandRevenue {
+  brand: string;
   revenue: number;
+  profit: number;
 }
 
 export interface DashboardStats {
   totalRevenue: number;
+  totalProfit: number;
   ordersToday: number;
-  lowStockItems: number;
   totalCustomers: number;
+  availablePieces: number;
 }
 
-export type SortOption = "newest" | "price-asc" | "price-desc" | "popular";
+export type SortOption = "newest" | "price-asc" | "price-desc";
 
 export interface ProductFilters {
   search: string;
-  categories: Category[];
   brands: string[];
-  sizes: string[];
-  colors: string[];
   priceRange: [number, number];
   sort: SortOption;
+}
+
+export type ProductInput = Omit<Product, "id" | "imageUrl" | "isSold" | "createdAt">;
+
+export function calcDiscountPercent(displayPrice: number, discountPrice: number): number {
+  if (displayPrice <= 0 || discountPrice >= displayPrice) return 0;
+  return Math.round(((displayPrice - discountPrice) / displayPrice) * 100);
+}
+
+export function calcProfit(discountPrice: number, purchasePrice: number): number {
+  return discountPrice - purchasePrice;
 }

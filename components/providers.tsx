@@ -2,14 +2,17 @@
 
 import { AdminAuthProvider } from "@/context/AdminAuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
 import { DataProvider } from "@/context/DataContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <DataProvider>
-      <CartProvider>
-        <AdminAuthProvider>{children}</AdminAuthProvider>
-      </CartProvider>
+      <CustomerAuthProvider>
+        <CartProvider>
+          <AdminAuthProvider>{children}</AdminAuthProvider>
+        </CartProvider>
+      </CustomerAuthProvider>
     </DataProvider>
   );
 }

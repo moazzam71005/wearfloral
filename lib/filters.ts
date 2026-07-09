@@ -12,44 +12,27 @@ export function filterProducts(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
+        p.productCode.toLowerCase().includes(q) ||
+        p.volume.toLowerCase().includes(q)
     );
-  }
-
-  if (filters.categories.length > 0) {
-    result = result.filter((p) => filters.categories.includes(p.category));
   }
 
   if (filters.brands.length > 0) {
     result = result.filter((p) => filters.brands.includes(p.brand));
   }
 
-  if (filters.sizes.length > 0) {
-    result = result.filter((p) =>
-      p.sizes.some((s) => filters.sizes.includes(s))
-    );
-  }
-
-  if (filters.colors.length > 0) {
-    result = result.filter((p) =>
-      p.colors.some((c) => filters.colors.includes(c))
-    );
-  }
-
   result = result.filter(
     (p) =>
-      p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1]
+      p.discountPrice >= filters.priceRange[0] &&
+      p.discountPrice <= filters.priceRange[1]
   );
 
   switch (filters.sort) {
     case "price-asc":
-      result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => a.discountPrice - b.discountPrice);
       break;
     case "price-desc":
-      result.sort((a, b) => b.price - a.price);
-      break;
-    case "popular":
-      result.sort((a, b) => b.reviewCount - a.reviewCount);
+      result.sort((a, b) => b.discountPrice - a.discountPrice);
       break;
     case "newest":
     default:
@@ -65,10 +48,17 @@ export function filterProducts(
 
 export const defaultFilters: ProductFilters = {
   search: "",
-  categories: [],
   brands: [],
-  sizes: [],
-  colors: [],
-  priceRange: [0, 20000],
+  priceRange: [0, 50000],
   sort: "newest",
 };
+
+export function getRelatedProducts(
+  products: Product[],
+  product: Product,
+  limit = 4
+): Product[] {
+  return products
+    .filter((p) => p.id !== product.id && p.brand === product.brand && !p.isSold)
+    .slice(0, limit);
+}

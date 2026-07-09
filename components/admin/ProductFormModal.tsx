@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import type { Category, Product } from "@/lib/types";
-import { BRANDS, CATEGORIES, COLORS, SIZES } from "@/lib/constants";
+import { useState, useRef } from "react";
+import Image from "next/image";
+import type { Product } from "@/lib/types";
+import { calcDiscountPercent } from "@/lib/types";
+import { BRANDS } from "@/lib/constants";
+import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -25,33 +27,34 @@ import {
 interface ProductFormModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (product: Omit<Product, "id" | "createdAt">) => void;
-  onUpdate?: (id: string, updates: Partial<Product>) => void;
+  onSave: (data: {
+    productCode: string;
+    name: string;
+    brand: string;
+    volume: string;
+    description: string;
+    displayPrice: number;
+    discountPrice: number;
+    purchasePrice: number;
+    imagePath: string;
+  }, imageFile: File) => Promise<void>;
+  onUpdate?: (
+    id: string,
+    data: Partial<{
+      productCode: string;
+      name: string;
+      brand: string;
+      volume: string;
+      description: string;
+      displayPrice: number;
+      discountPrice: number;
+      purchasePrice: number;
+      imagePath: string;
+    }>,
+    imageFile?: File
+  ) => Promise<void>;
   product?: Product | null;
 }
-
-const emptyForm = {
-  name: "",
-  slug: "",
-  description: "",
-  material: "",
-  care: "",
-  shipping: "Ships within 2-3 business days.",
-  category: "Lawn" as Category,
-  brand: "Wear Floral",
-  price: 0,
-  compareAtPrice: 0,
-  images: [""],
-  colors: ["White"] as string[],
-  sizes: ["S", "M", "L"] as string[],
-  stock: 10,
-  lowStockThreshold: 5,
-  sku: "",
-  isNewArrival: false,
-  isBestSeller: false,
-  rating: 4.5,
-  reviewCount: 0,
-};
 
 export function ProductFormModal({
   open,
@@ -60,273 +63,203 @@ export function ProductFormModal({
   onUpdate,
   product,
 }: ProductFormModalProps) {
-  const [form, setForm] = useState(() =>
-    product
-      ? {
-          name: product.name,
-          slug: product.slug,
-          description: product.description,
-          material: product.material,
-          care: product.care,
-          shipping: product.shipping,
-          category: product.category,
-          brand: product.brand,
-          price: product.price,
-          compareAtPrice: product.compareAtPrice || 0,
-          images: product.images,
-          colors: product.colors,
-          sizes: product.sizes,
-          stock: product.stock,
-          lowStockThreshold: product.lowStockThreshold,
-          sku: product.sku,
-          isNewArrival: product.isNewArrival,
-          isBestSeller: product.isBestSeller,
-          rating: product.rating,
-          reviewCount: product.reviewCount,
-        }
-      : emptyForm
-  );
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [preview, setPreview] = useState<string | null>(product?.imageUrl ?? null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [form, setForm] = useState({
+    productCode: product?.productCode ?? "",
+    name: product?.name ?? "",
+    brand: product?.brand ?? BRANDS[0],
+    volume: product?.volume ?? "",
+    description: product?.description ?? "",
+    displayPrice: product?.displayPrice ?? 0,
+    discountPrice: product?.discountPrice ?? 0,
+    purchasePrice: product?.purchasePrice ?? 0,
+  });
+
+  const discount = calcDiscountPercent(form.displayPrice, form.discountPrice);
+  const profit = form.discountPrice - form.purchasePrice;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const data = {
-      ...form,
-      slug: form.slug || form.name.toLowerCase().replace(/\s+/g, "-"),
-      compareAtPrice: form.compareAtPrice || undefined,
-      images: form.images.filter(Boolean),
-    };
-    if (product && onUpdate) {
-      onUpdate(product.id, data);
-    } else {
-      onSave(data);
+    setError("");
+
+    if (!product && !imageFile) {
+      setError("Please upload a product photo");
+      return;
     }
-    onClose();
-  };
+    if (!form.productCode.trim()) {
+      setError("Product ID is required");
+      return;
+    }
+    if (form.discountPrice > form.displayPrice) {
+      setError("Discount price cannot exceed display price");
+      return;
+    }
 
-  const toggleSize = (size: string) => {
-    setForm((prev) => ({
-      ...prev,
-      sizes: prev.sizes.includes(size)
-        ? prev.sizes.filter((s) => s !== size)
-        : [...prev.sizes, size],
-    }));
-  };
+    setLoading(true);
+    try {
+      const data = {
+        ...form,
+        name: form.name || `${form.brand} - ${form.productCode}`,
+        imagePath: product?.imagePath ?? "",
+      };
 
-  const toggleColor = (color: string) => {
-    setForm((prev) => ({
-      ...prev,
-      colors: prev.colors.includes(color)
-        ? prev.colors.filter((c) => c !== color)
-        : [...prev.colors, color],
-    }));
+      if (product && onUpdate) {
+        await onUpdate(product.id, data, imageFile ?? undefined);
+      } else if (imageFile) {
+        await onSave(data, imageFile);
+      }
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save product");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {product ? "Edit Product" : "Add Product"}
-          </DialogTitle>
+          <DialogTitle>{product ? "Edit Product" : "Add Product"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Name</Label>
+            <Label>Product Photo *</Label>
+            <div className="mt-2 flex items-center gap-4">
+              {preview && (
+                <div className="relative h-24 w-20 overflow-hidden rounded-lg bg-stone-100">
+                  <Image src={preview} alt="Preview" fill className="object-cover" />
+                </div>
+              )}
+              <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+                {preview ? "Change Photo" : "Upload Photo"}
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Product ID *</Label>
             <Input
               required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              value={form.productCode}
+              onChange={(e) => setForm({ ...form, productCode: e.target.value })}
+              placeholder="e.g. WF-001"
               className="mt-1"
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Price (PKR)</Label>
-              <Input
-                type="number"
-                required
-                min={0}
-                value={form.price}
-                onChange={(e) =>
-                  setForm({ ...form, price: Number(e.target.value) })
-                }
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Compare Price</Label>
-              <Input
-                type="number"
-                min={0}
-                value={form.compareAtPrice}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    compareAtPrice: Number(e.target.value),
-                  })
-                }
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Category</Label>
-              <Select
-                value={form.category}
-                onValueChange={(v) =>
-                  v && setForm({ ...form, category: v as Category })
-                }
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.name} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Brand</Label>
-              <Select
-                value={form.brand}
-                onValueChange={(v) => v && setForm({ ...form, brand: v })}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
+              <Label>Brand *</Label>
+              <Select value={form.brand} onValueChange={(v) => v && setForm({ ...form, brand: v })}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {BRANDS.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
-                    </SelectItem>
+                    <SelectItem key={b} value={b}>{b}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Volume</Label>
+              <Input
+                value={form.volume}
+                onChange={(e) => setForm({ ...form, volume: e.target.value })}
+                placeholder="3-Piece Unstitched"
+                className="mt-1"
+              />
+            </div>
           </div>
+
+          <div>
+            <Label>Name</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Auto-generated if empty"
+              className="mt-1"
+            />
+          </div>
+
           <div>
             <Label>Description</Label>
             <Textarea
               value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="mt-1"
             />
           </div>
-          <div>
-            <Label>Image URL</Label>
-            <Input
-              value={form.images[0]}
-              onChange={(e) =>
-                setForm({ ...form, images: [e.target.value] })
-              }
-              placeholder="https://..."
-              className="mt-1"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label>Stock</Label>
+              <Label>Display Price</Label>
               <Input
                 type="number"
+                required
                 min={0}
-                value={form.stock}
-                onChange={(e) =>
-                  setForm({ ...form, stock: Number(e.target.value) })
-                }
+                value={form.displayPrice || ""}
+                onChange={(e) => setForm({ ...form, displayPrice: Number(e.target.value) })}
                 className="mt-1"
               />
             </div>
             <div>
-              <Label>SKU</Label>
+              <Label>Discount Price</Label>
               <Input
-                value={form.sku}
-                onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                type="number"
+                required
+                min={0}
+                value={form.discountPrice || ""}
+                onChange={(e) => setForm({ ...form, discountPrice: Number(e.target.value) })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Cost Price</Label>
+              <Input
+                type="number"
+                required
+                min={0}
+                value={form.purchasePrice || ""}
+                onChange={(e) => setForm({ ...form, purchasePrice: Number(e.target.value) })}
                 className="mt-1"
               />
             </div>
           </div>
-          <div>
-            <Label className="mb-2 block">Sizes</Label>
-            <div className="flex flex-wrap gap-2">
-              {SIZES.map((size) => (
-                <Button
-                  key={size}
-                  type="button"
-                  variant={form.sizes.includes(size) ? "default" : "outline"}
-                  size="sm"
-                  className={
-                    form.sizes.includes(size)
-                      ? "bg-rose-400 hover:bg-rose-500 text-white"
-                      : ""
-                  }
-                  onClick={() => toggleSize(size)}
-                >
-                  {size}
-                </Button>
-              ))}
+
+          {form.displayPrice > 0 && (
+            <div className="rounded-lg bg-stone-50 p-3 text-sm">
+              <p>Discount: <strong>{discount}%</strong></p>
+              <p>Profit per sale: <strong className="text-green-600">{formatCurrency(profit)}</strong></p>
             </div>
-          </div>
-          <div>
-            <Label className="mb-2 block">Colors</Label>
-            <div className="flex flex-wrap gap-2">
-              {COLORS.map((color) => (
-                <Button
-                  key={color}
-                  type="button"
-                  variant={
-                    form.colors.includes(color) ? "default" : "outline"
-                  }
-                  size="sm"
-                  className={
-                    form.colors.includes(color)
-                      ? "bg-rose-400 hover:bg-rose-500 text-white"
-                      : ""
-                  }
-                  onClick={() => toggleColor(color)}
-                >
-                  {color}
-                </Button>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="newArrival"
-                checked={form.isNewArrival}
-                onCheckedChange={(c) =>
-                  setForm({ ...form, isNewArrival: !!c })
-                }
-              />
-              <Label htmlFor="newArrival">New Arrival</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="bestSeller"
-                checked={form.isBestSeller}
-                onCheckedChange={(c) =>
-                  setForm({ ...form, isBestSeller: !!c })
-                }
-              />
-              <Label htmlFor="bestSeller">Best Seller</Label>
-            </div>
-          </div>
+          )}
+
+          {error && (
+            <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-rose-400 hover:bg-rose-500 text-white"
-            >
-              {product ? "Update" : "Add Product"}
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={loading} className="bg-rose-500 hover:bg-rose-600 text-white">
+              {loading ? "Saving…" : product ? "Update" : "Add Product"}
             </Button>
           </div>
         </form>

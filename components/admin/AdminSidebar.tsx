@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
+  Users,
   Warehouse,
   X,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/inventory", label: "Inventory", icon: Warehouse },
+  { href: "/admin/users", label: "Customers", icon: Users },
   { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },
 ];
 
@@ -34,38 +36,26 @@ export function AdminSidebar({ mobile, onClose }: AdminSidebarProps) {
     <aside
       className={cn(
         "flex flex-col bg-stone-950 text-white",
-        mobile
-          ? "h-full"
-          : "hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0 lg:z-40"
+        mobile ? "h-full" : "hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0 lg:z-40"
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-stone-800 px-5">
-        <Link href="/admin" className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500">
-            <span className="text-sm font-bold text-white">W</span>
-          </div>
+      <div className="flex h-20 items-center justify-between border-b border-stone-800 px-5">
+        <Link href="/admin" className="flex items-center">
           <Image
             src="/logo.png"
             alt="Wear Floral"
-            width={90}
-            height={36}
-            className="h-7 w-auto object-contain brightness-0 invert"
+            width={140}
+            height={56}
+            className="h-12 w-auto object-contain"
           />
         </Link>
         {mobile && onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-stone-400 hover:text-white"
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-stone-400">
             <X className="h-5 w-5" />
           </Button>
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1 p-4">
         <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-stone-600">
           Management
@@ -86,21 +76,20 @@ export function AdminSidebar({ mobile, onClose }: AdminSidebarProps) {
                   : "text-stone-400 hover:bg-stone-800 hover:text-white"
               )}
             >
-              <item.icon className="h-4.5 w-4.5" />
+              <item.icon className="h-4 w-4" />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-stone-800 p-4 space-y-2">
+      <div className="border-t border-stone-800 p-4">
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-stone-500 hover:text-white transition-colors"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-stone-500 hover:text-white"
         >
-          ↗ View Storefront
+          View Storefront
         </Link>
       </div>
     </aside>

@@ -15,30 +15,16 @@ interface CartContextValue {
   itemCount: number;
   subtotal: number;
   addItem: (item: CartItem) => void;
-  removeItem: (
-    productId: string,
-    size: string,
-    color: string
-  ) => void;
-  updateQuantity: (
-    productId: string,
-    size: string,
-    color: string,
-    quantity: number
-  ) => void;
+  removeItem: (productId: string) => void;
   clearCart: () => void;
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  hasItem: (productId: string) => boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-
 const CART_STORAGE_KEY = "wearfloral-cart";
-
-function getItemKey(productId: string, size: string, color: string) {
-  return `${productId}-${size}-${color}`;
-}
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -48,9 +34,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
-      if (stored) {
-        setItems(JSON.parse(stored));
-      }
+      if (stored) setItems(JSON.parse(stored));
     } catch {
       // ignore
     }
@@ -64,64 +48,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find(
-        (i) =>
-          getItemKey(i.productId, i.size, i.color) ===
-          getItemKey(item.productId, item.size, item.color)
-      );
-      if (existing) {
-        return prev.map((i) =>
-          getItemKey(i.productId, i.size, i.color) ===
-          getItemKey(item.productId, item.size, item.color)
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        );
-      }
+      if (prev.some((i) => i.productId === item.productId)) return prev;
       return [...prev, item];
     });
     setIsOpen(true);
   }, []);
 
-  const removeItem = useCallback(
-    (productId: string, size: string, color: string) => {
-      setItems((prev) =>
-        prev.filter(
-          (i) =>
-            getItemKey(i.productId, i.size, i.color) !==
-            getItemKey(productId, size, color)
-        )
-      );
-    },
-    []
-  );
-
-  const updateQuantity = useCallback(
-    (productId: string, size: string, color: string, quantity: number) => {
-      if (quantity <= 0) {
-        removeItem(productId, size, color);
-        return;
-      }
-      setItems((prev) =>
-        prev.map((i) =>
-          getItemKey(i.productId, i.size, i.color) ===
-          getItemKey(productId, size, color)
-            ? { ...i, quantity }
-            : i
-        )
-      );
-    },
-    [removeItem]
-  );
+  const removeItem = useCallback((productId: string) => {
+    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
 
-  const itemCount = useMemo(
-    () => items.reduce((sum, i) => sum + i.quantity, 0),
+  const hasItem = useCallback(
+    (productId: string) => items.some((i) => i.productId === productId),
     [items]
   );
 
+  const itemCount = items.length;
   const subtotal = useMemo(
-    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    () => items.reduce((sum, i) => sum + i.discountPrice, 0),
     [items]
   );
 
@@ -132,22 +78,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotal,
       addItem,
       removeItem,
-      updateQuantity,
       clearCart,
       isOpen,
       openCart: () => setIsOpen(true),
       closeCart: () => setIsOpen(false),
+      hasItem,
     }),
-    [
-      items,
-      itemCount,
-      subtotal,
-      addItem,
-      removeItem,
-      updateQuantity,
-      clearCart,
-      isOpen,
-    ]
+    [items, itemCount, subtotal, addItem, removeItem, clearCart, isOpen, hasItem]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

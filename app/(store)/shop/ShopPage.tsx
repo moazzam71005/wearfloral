@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Loader2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { ProductCard } from "@/components/store/ProductCard";
 import { FilterSidebar } from "@/components/store/FilterSidebar";
 import { defaultFilters, filterProducts } from "@/lib/filters";
-import type { Category, ProductFilters, SortOption } from "@/lib/types";
+import type { ProductFilters, SortOption } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,38 +24,32 @@ import {
 } from "@/components/ui/sheet";
 
 export default function ShopPage() {
-  const { products } = useData();
+  const { products, isLoading } = useData();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<ProductFilters>(defaultFilters);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const perPage = 9;
+  const perPage = 12;
 
   useEffect(() => {
     const search = searchParams.get("search") || "";
-    const category = searchParams.get("category");
-
+    const brand = searchParams.get("brand");
     setFilters((prev) => ({
       ...prev,
       search,
-      categories: category ? [category as Category] : prev.categories,
+      brands: brand ? [brand] : prev.brands,
     }));
   }, [searchParams]);
 
-  const filteredProducts = useMemo(() => {
-    let result = filterProducts(products, filters);
-    const filter = searchParams.get("filter");
-    if (filter === "new") {
-      result = result.filter((p) => p.isNewArrival);
-    } else if (filter === "bestseller") {
-      result = result.filter((p) => p.isBestSeller);
-    }
-    return result;
-  }, [products, filters, searchParams]);
+  const filteredProducts = useMemo(
+    () => filterProducts(products, filters),
+    [products, filters]
+  );
 
-  const paginatedProducts = useMemo(() => {
-    return filteredProducts.slice(0, page * perPage);
-  }, [filteredProducts, page]);
+  const paginatedProducts = useMemo(
+    () => filteredProducts.slice(0, page * perPage),
+    [filteredProducts, page]
+  );
 
   const hasMore = paginatedProducts.length < filteredProducts.length;
 
@@ -65,12 +59,20 @@ export default function ShopPage() {
     setPage(1);
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-stone-900">Shop All</h1>
+        <h1 className="text-3xl font-bold text-stone-900">Shop Fabrics</h1>
         <p className="mt-1 text-stone-500">
-          {filteredProducts.length} products found
+          {filteredProducts.length} piece{filteredProducts.length !== 1 ? "s" : ""} available
         </p>
       </div>
 
@@ -99,19 +101,14 @@ export default function ShopPage() {
                 <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="price-asc">Price: Low to High</SelectItem>
                 <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                <SelectItem value="popular">Most Popular</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {filteredProducts.length === 0 ? (
             <div className="py-20 text-center">
-              <p className="text-stone-500">No products match your filters.</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setFilters(defaultFilters)}
-              >
+              <p className="text-stone-500">No fabrics match your filters.</p>
+              <Button variant="outline" className="mt-4" onClick={() => setFilters(defaultFilters)}>
                 Clear Filters
               </Button>
             </div>
@@ -124,10 +121,7 @@ export default function ShopPage() {
               </div>
               {hasMore && (
                 <div className="mt-10 text-center">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((p) => p + 1)}
-                  >
+                  <Button variant="outline" onClick={() => setPage((p) => p + 1)}>
                     Load More
                   </Button>
                 </div>
@@ -153,5 +147,3 @@ export default function ShopPage() {
     </div>
   );
 }
-
-

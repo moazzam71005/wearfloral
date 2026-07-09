@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { formatCurrency } from "@/lib/format";
+import { calcProfit } from "@/lib/types";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,27 +21,21 @@ import {
 import { ProductFormModal } from "@/components/admin/ProductFormModal";
 
 export default function AdminProductsPage() {
-  const { products, addProduct, updateProduct, deleteProduct } = useData();
+  const { allProducts, addProduct, updateProduct, deleteProduct, refreshProducts } = useData();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const filtered = products.filter(
+  useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
+
+  const filtered = allProducts.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.sku.toLowerCase().includes(search.toLowerCase()) ||
+      p.productCode.toLowerCase().includes(search.toLowerCase()) ||
       p.brand.toLowerCase().includes(search.toLowerCase())
   );
-
-  const openAdd = () => {
-    setEditingProduct(null);
-    setModalOpen(true);
-  };
-
-  const openEdit = (product: Product) => {
-    setEditingProduct(product);
-    setModalOpen(true);
-  };
 
   return (
     <div className="space-y-6">
@@ -54,12 +49,8 @@ export default function AdminProductsPage() {
             className="pl-10"
           />
         </div>
-        <Button
-          onClick={openAdd}
-          className="bg-rose-400 hover:bg-rose-500 text-white gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Product
+        <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }} className="bg-rose-500 hover:bg-rose-600 text-white gap-2">
+          <Plus className="h-4 w-4" /> Add Product
         </Button>
       </div>
 
@@ -68,76 +59,70 @@ export default function AdminProductsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>
-              <TableHead className="hidden md:table-cell">Category</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead className="hidden sm:table-cell">Stock</TableHead>
-              <TableHead className="hidden lg:table-cell">SKU</TableHead>
+              <TableHead className="hidden md:table-cell">Brand</TableHead>
+              <TableHead>Sale Price</TableHead>
+              <TableHead className="hidden sm:table-cell">Cost</TableHead>
+              <TableHead className="hidden lg:table-cell">Profit</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded bg-stone-100">
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium line-clamp-1">{product.name}</p>
-                      <p className="text-xs text-stone-500">{product.brand}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {product.category}
-                </TableCell>
-                <TableCell>{formatCurrency(product.price)}</TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <Badge
-                    variant="secondary"
-                    className={
-                      product.stock <= product.lowStockThreshold
-                        ? "bg-red-100 text-red-800"
-                        : ""
-                    }
-                  >
-                    {product.stock}
-                  </Badge>
-                </TableCell>
-                <TableCell className="hidden lg:table-cell text-stone-500 text-sm">
-                  {product.sku}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openEdit(product)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => {
-                        if (confirm("Delete this product?")) {
-                          deleteProduct(product.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-stone-500">
+                  No products yet. Add your first fabric piece.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filtered.map((product) => (
+                <TableRow key={product.id} className={product.isSold ? "opacity-60" : ""}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded bg-stone-100">
+                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                      </div>
+                      <div>
+                        <p className="font-medium line-clamp-1">{product.name}</p>
+                        <p className="text-xs text-stone-500">{product.productCode}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{product.brand}</TableCell>
+                  <TableCell>{formatCurrency(product.discountPrice)}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-stone-500">
+                    {formatCurrency(product.purchasePrice)}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-green-600">
+                    {formatCurrency(calcProfit(product.discountPrice, product.purchasePrice))}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className={product.isSold ? "bg-stone-100 text-stone-600" : "bg-green-100 text-green-800"}>
+                      {product.isSold ? "Sold" : "Available"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      {!product.isSold && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500"
+                          onClick={async () => {
+                            if (confirm("Delete this product?")) await deleteProduct(product.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -153,5 +138,3 @@ export default function AdminProductsPage() {
     </div>
   );
 }
-
-
