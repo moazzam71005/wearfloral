@@ -9,7 +9,7 @@ import { useData } from "@/context/DataContext";
 import { useCart } from "@/context/CartContext";
 import { getRelatedProducts } from "@/lib/filters";
 import { formatCurrency } from "@/lib/format";
-import { calcDiscountPercent } from "@/lib/types";
+import { calcDiscountPercent, getStorefrontPrice } from "@/lib/types";
 import { FREE_SHIPPING_MESSAGE } from "@/lib/constants";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ export default function ProductDetailPage({
   const related = getRelatedProducts(products, product);
   const inCart = hasItem(product.id);
   const soldOut = product.isSold;
+  const storefrontPrice = getStorefrontPrice(product);
 
   const handleAddToCart = () => {
     if (soldOut || inCart) return;
@@ -109,9 +110,9 @@ export default function ProductDetailPage({
 
           <div className="mt-4 flex items-center gap-3">
             <span className="text-2xl font-bold text-stone-900">
-              {formatCurrency(product.discountPrice)}
+              {formatCurrency(storefrontPrice)}
             </span>
-            {discount > 0 && (
+            {!soldOut && discount > 0 && (
               <span className="text-lg text-stone-400 line-through">
                 {formatCurrency(product.displayPrice)}
               </span>

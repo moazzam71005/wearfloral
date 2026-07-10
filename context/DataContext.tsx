@@ -38,6 +38,7 @@ interface DataContextValue {
     imageFiles?: File[]
   ) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  markProductSold: (id: string) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
   placeOrder: (order: Omit<Order, "createdAt" | "updatedAt">) => Promise<void>;
   fetchCustomerOrders: (customerId: string) => Promise<Order[]>;
@@ -263,6 +264,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [allProducts, refreshProducts]
   );
 
+  const markProductSold = useCallback(
+    async (id: string) => {
+      const { error: err } = await supabase
+        .from("products")
+        .update({ is_sold: true })
+        .eq("id", id);
+      if (err) throw err;
+      await refreshProducts();
+    },
+    [refreshProducts]
+  );
+
   const updateOrderStatus = useCallback(
     async (id: string, status: OrderStatus) => {
       const { error: err } = await supabase
@@ -346,6 +359,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       addProduct,
       updateProduct,
       deleteProduct,
+      markProductSold,
       updateOrderStatus,
       placeOrder,
       fetchCustomerOrders,
@@ -363,6 +377,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       addProduct,
       updateProduct,
       deleteProduct,
+      markProductSold,
       updateOrderStatus,
       placeOrder,
       fetchCustomerOrders,

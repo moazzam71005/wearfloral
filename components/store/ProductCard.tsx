@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { calcDiscountPercent } from "@/lib/types";
+import { calcDiscountPercent, getStorefrontPrice } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/context/CartContext";
 
@@ -18,6 +18,7 @@ export function ProductCard({ product, priority }: ProductCardProps) {
   const discount = calcDiscountPercent(product.displayPrice, product.discountPrice);
   const inCart = hasItem(product.id);
   const soldOut = product.isSold;
+  const storefrontPrice = getStorefrontPrice(product);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -79,9 +80,9 @@ export function ProductCard({ product, priority }: ProductCardProps) {
         <p className="text-xs text-stone-500">{product.volume}</p>
         <div className="flex items-center gap-2 pt-0.5">
           <span className="font-semibold text-stone-900">
-            {formatCurrency(product.discountPrice)}
+            {formatCurrency(storefrontPrice)}
           </span>
-          {discount > 0 && (
+          {!soldOut && discount > 0 && (
             <span className="text-sm text-stone-400 line-through">
               {formatCurrency(product.displayPrice)}
             </span>

@@ -1,11 +1,12 @@
 import type { DashboardStats, Order, Product } from "./types";
+import { getOfflineSaleProfit, getOfflineSaleRevenue } from "./types";
 import { getOfflineSoldProducts } from "./products";
 
 function offlineSaleTotals(products: Product[], orders: Order[]) {
   return getOfflineSoldProducts(products, orders).reduce(
     (acc, product) => ({
-      revenue: acc.revenue + product.discountPrice,
-      profit: acc.profit + (product.discountPrice - product.purchasePrice),
+      revenue: acc.revenue + getOfflineSaleRevenue(product),
+      profit: acc.profit + getOfflineSaleProfit(product),
     }),
     { revenue: 0, profit: 0 }
   );
@@ -78,8 +79,8 @@ export function buildRevenueByDate(orders: Order[], products: Product[] = []) {
     });
     const current = map.get(date) ?? { revenue: 0, profit: 0, orders: 0 };
     map.set(date, {
-      revenue: current.revenue + product.discountPrice,
-      profit: current.profit + (product.discountPrice - product.purchasePrice),
+      revenue: current.revenue + getOfflineSaleRevenue(product),
+      profit: current.profit + getOfflineSaleProfit(product),
       orders: current.orders,
     });
   });
@@ -107,8 +108,8 @@ export function buildRevenueByBrand(orders: Order[], products: Product[] = []) {
   getOfflineSoldProducts(products, orders).forEach((product) => {
     const current = map.get(product.brand) ?? { revenue: 0, profit: 0 };
     map.set(product.brand, {
-      revenue: current.revenue + product.discountPrice,
-      profit: current.profit + (product.discountPrice - product.purchasePrice),
+      revenue: current.revenue + getOfflineSaleRevenue(product),
+      profit: current.profit + getOfflineSaleProfit(product),
     });
   });
 

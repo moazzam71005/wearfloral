@@ -115,6 +115,20 @@ export function calcDiscountPercent(displayPrice: number, discountPrice: number)
   return Math.round(((displayPrice - discountPrice) / displayPrice) * 100);
 }
 
-export function calcProfit(discountPrice: number, purchasePrice: number): number {
-  return discountPrice - purchasePrice;
+export function calcProfit(salePrice: number, purchasePrice: number): number {
+  return salePrice - purchasePrice;
+}
+
+/** Storefront price — sold items show full display price, not the discount. */
+export function getStorefrontPrice(product: Product): number {
+  return product.isSold ? product.displayPrice : product.discountPrice;
+}
+
+/** Revenue credited when a product is marked sold offline or via admin. */
+export function getOfflineSaleRevenue(product: Product): number {
+  return product.discountPrice;
+}
+
+export function getOfflineSaleProfit(product: Product): number {
+  return calcProfit(product.discountPrice, product.purchasePrice);
 }

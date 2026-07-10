@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, Tag } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { formatCurrency } from "@/lib/format";
-import { calcProfit } from "@/lib/types";
+import { calcProfit, getOfflineSaleProfit } from "@/lib/types";
 import { sortProductsForDisplay } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,11 @@ import {
 import { ProductFormModal } from "@/components/admin/ProductFormModal";
 
 export default function AdminProductsPage() {
-  const { allProducts, addProduct, updateProduct, deleteProduct, refreshProducts } = useData();
+  const { allProducts, addProduct, updateProduct, deleteProduct, markProductSold, refreshProducts } = useData();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
 
   useEffect(() => {
     refreshProducts();
@@ -106,7 +107,11 @@ export default function AdminProductsPage() {
                     {formatCurrency(product.purchasePrice)}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell text-green-600">
-                    {formatCurrency(calcProfit(product.discountPrice, product.purchasePrice))}
+                    {formatCurrency(
+                      product.isSold
+                        ? getOfflineSaleProfit(product)
+                        : calcProfit(product.discountPrice, product.purchasePrice)
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className={product.isSold ? "bg-stone-100 text-stone-600" : "bg-green-100 text-green-800"}>
@@ -119,16 +124,42 @@ export default function AdminProductsPage() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                       {!product.isSold && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500"
-                          onClick={async () => {
-                            if (confirm("Delete this product?")) await deleteProduct(product.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            title="Mark as sold out"
+                            disabled={markingSoldId === product.id}
+                            onClick={async () => {
+                              if (
+                                !confirm(
+                                  `Mark "${product.name}" as sold out? Revenue will be recorded at ${formatCurrency(product.discountPrice)}.`
+                                )
+                              ) {
+                                return;
+                              }
+                              setMarkingSoldId(product.id);
+                              try {
+                                await markProductSold(product.id);
+                              } finally {
+                                setMarkingSoldId(null);
+                              }
+                            }}
+                          >
+                            <Tag className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500"
+                            onClick={async () => {
+                              if (confirm("Delete this product?")) await deleteProduct(product.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>
