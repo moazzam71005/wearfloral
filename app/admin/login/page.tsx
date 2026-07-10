@@ -45,9 +45,9 @@ export default function AdminLoginPage() {
           <Image
             src="/logo.png"
             alt="Wear Floral"
-            width={160}
-            height={80}
-            className="object-contain"
+            width={320}
+            height={128}
+            className="h-24 w-auto object-contain"
           />
         </div>
 

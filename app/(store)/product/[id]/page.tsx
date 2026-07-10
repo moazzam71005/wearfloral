@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { getRelatedProducts } from "@/lib/filters";
 import { formatCurrency } from "@/lib/format";
 import { calcDiscountPercent } from "@/lib/types";
+import { FREE_SHIPPING_MESSAGE } from "@/lib/constants";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +64,7 @@ export default function ProductDetailPage({
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-stone-100">
           <Image
-            src={product.imageUrls[selectedImage] || product.imageUrl || "/placeholder-product.png"}
+            src={product.imageUrls[selectedImage] || product.imageUrl || "/placeholder-product.svg"}
             alt={product.name}
             fill
             className="object-cover"
@@ -142,7 +143,7 @@ export default function ProductDetailPage({
 
           <div className="mt-6 flex items-center gap-2 rounded-lg bg-stone-50 p-4 text-sm text-stone-600">
             <Truck className="h-5 w-5 text-rose-400" />
-            Free shipping on orders over PKR 5,000
+            {FREE_SHIPPING_MESSAGE}
           </div>
         </div>
       </div>

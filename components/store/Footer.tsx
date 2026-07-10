@@ -9,7 +9,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Image src="/logo.png" alt="Wear Floral" width={160} height={64} className="h-12 w-auto object-contain" />
+            <Image src="/logo.png" alt="Wear Floral" width={280} height={112} className="h-20 w-auto object-contain" />
             <p className="mt-4 text-sm leading-relaxed text-stone-500">
               Premium unstitched fabrics from renowned Pakistani brands.
             </p>

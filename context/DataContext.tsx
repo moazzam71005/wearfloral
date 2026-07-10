@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { mapDbProduct, productToDb } from "@/lib/db-mappers";
 import { PRODUCT_IMAGE_BUCKET } from "@/lib/constants";
+import { sortProductsForDisplay } from "@/lib/products";
 import type {
   CustomerWithStats,
   Order,
@@ -103,7 +104,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const products = useMemo(
-    () => allProducts.filter((p) => !p.isSold),
+    () => sortProductsForDisplay(allProducts),
     [allProducts]
   );
 
@@ -181,7 +182,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const addProduct = useCallback(
     async (data: ProductInput, imageFiles: File[]) => {
-      const uploadedPaths = await uploadProductImages(imageFiles, data.productCode);
+      const uploadedPaths =
+        imageFiles.length > 0
+          ? await uploadProductImages(imageFiles, data.productCode)
+          : [];
       const thumbnailIndex = Math.max(
         0,
         Math.min(data.thumbnailIndex ?? 0, Math.max(0, uploadedPaths.length - 1))
@@ -193,6 +197,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           imagePath,
           imagePaths: uploadedPaths,
           thumbnailIndex,
+          isSold: data.isSold ?? false,
         })
       );
       if (err) throw err;
@@ -231,6 +236,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         displayPrice: data.displayPrice ?? 0,
         discountPrice: data.discountPrice ?? 0,
         purchasePrice: data.purchasePrice ?? 0,
+        isSold: data.isSold ?? existingProduct?.isSold ?? false,
       });
       const { error: err } = await supabase
         .from("products")

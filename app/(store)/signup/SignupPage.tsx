@@ -64,7 +64,7 @@ export default function SignupPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
       <div className="mb-8 flex justify-center">
-        <Image src="/logo.png" alt="Wear Floral" width={160} height={64} className="h-14 w-auto" />
+        <Image src="/logo.png" alt="Wear Floral" width={280} height={112} className="h-20 w-auto sm:h-24" />
       </div>
       <h1 className="text-center text-2xl font-bold text-stone-900">Create Account</h1>
       <p className="mt-2 text-center text-sm text-stone-500">Sign up to checkout and track orders</p>

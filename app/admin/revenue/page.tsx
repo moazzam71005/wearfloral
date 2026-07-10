@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useData } from "@/context/DataContext";
-import { buildRevenueByBrand, buildRevenueByDate } from "@/lib/admin-stats";
+import { buildRevenueByBrand, buildRevenueByDate, getOfflineSalesTotals } from "@/lib/admin-stats";
 import { formatCurrency } from "@/lib/format";
 import { calcProfit } from "@/lib/types";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -11,23 +11,26 @@ import { BrandRevenueChart } from "@/components/admin/BrandRevenueChart";
 import { DollarSign, TrendingUp, RefreshCw } from "lucide-react";
 
 export default function AdminRevenuePage() {
-  const { orders, refreshOrders } = useData();
+  const { orders, allProducts, refreshOrders } = useData();
 
   useEffect(() => {
     refreshOrders();
   }, [refreshOrders]);
 
   const completedOrders = orders.filter((o) => o.status !== "Cancelled");
-  const totalSales = completedOrders.reduce((sum, o) => sum + o.total, 0);
-  const totalProfit = completedOrders.reduce(
-    (sum, o) => sum + o.items.reduce((s, i) => s + calcProfit(i.discountPrice, i.purchasePrice), 0),
-    0
-  );
+  const offlineTotals = getOfflineSalesTotals(allProducts, orders);
+  const totalSales =
+    completedOrders.reduce((sum, o) => sum + o.total, 0) + offlineTotals.revenue;
+  const totalProfit =
+    completedOrders.reduce(
+      (sum, o) => sum + o.items.reduce((s, i) => s + calcProfit(i.discountPrice, i.purchasePrice), 0),
+      0
+    ) + offlineTotals.profit;
   const aov = completedOrders.length > 0 ? totalSales / completedOrders.length : 0;
   const refunds = orders.filter((o) => o.status === "Cancelled").reduce((sum, o) => sum + o.total, 0);
 
-  const chartData = useMemo(() => buildRevenueByDate(orders), [orders]);
-  const brandData = useMemo(() => buildRevenueByBrand(orders), [orders]);
+  const chartData = useMemo(() => buildRevenueByDate(orders, allProducts), [orders, allProducts]);
+  const brandData = useMemo(() => buildRevenueByBrand(orders, allProducts), [orders, allProducts]);
 
   return (
     <div className="space-y-6">

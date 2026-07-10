@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/format";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/constants";
+import { calcShippingFee, itemsUntilFreeShipping } from "@/lib/shipping";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 export function CartDrawer() {
   const { items, subtotal, isOpen, closeCart, removeItem } = useCart();
 
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shipping = calcShippingFee(items.length);
   const total = subtotal + (items.length > 0 ? shipping : 0);
 
   return (
@@ -74,9 +74,10 @@ export function CartDrawer() {
                 <span className="text-stone-500">Shipping</span>
                 <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
               </div>
-              {subtotal < FREE_SHIPPING_THRESHOLD && (
+              {itemsUntilFreeShipping(items.length) > 0 && (
                 <p className="text-xs text-rose-500">
-                  Add {formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)} more for free shipping
+                  Add {itemsUntilFreeShipping(items.length)} more item
+                  {itemsUntilFreeShipping(items.length) === 1 ? "" : "s"} for free shipping
                 </p>
               )}
               <Separator />

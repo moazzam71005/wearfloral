@@ -9,7 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { useData } from "@/context/DataContext";
 import { formatCurrency } from "@/lib/format";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/constants";
+import { calcShippingFee } from "@/lib/shipping";
 import type { Order, OrderItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ import {
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
-  const { placeOrder, products } = useData();
+  const { placeOrder, products, allProducts } = useData();
   const { isAuthenticated, isLoading, profile, user } = useCustomerAuth();
   const router = useRouter();
 
@@ -57,7 +57,7 @@ export default function CheckoutPage() {
     }
   }, [profile]);
 
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shipping = calcShippingFee(items.length);
   const total = subtotal + (items.length > 0 ? shipping : 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,6 +75,14 @@ export default function CheckoutPage() {
     if (cityErr) errors.city = cityErr;
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
+
+    const soldInCart = items.filter((item) =>
+      allProducts.find((p) => p.id === item.productId)?.isSold
+    );
+    if (soldInCart.length > 0) {
+      setError("One or more items in your cart are no longer available.");
+      return;
+    }
 
     setSubmitting(true);
     setError("");

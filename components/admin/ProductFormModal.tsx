@@ -40,6 +40,7 @@ interface ProductFormModalProps {
     imagePath: string;
     imagePaths: string[];
     thumbnailIndex: number;
+    isSold: boolean;
   }, imageFiles: File[]) => Promise<void>;
   onUpdate?: (
     id: string,
@@ -55,6 +56,7 @@ interface ProductFormModalProps {
       imagePath: string;
       imagePaths: string[];
       thumbnailIndex: number;
+      isSold: boolean;
     }>,
     imageFiles?: File[]
   ) => Promise<void>;
@@ -74,6 +76,7 @@ export function ProductFormModal({
   const [previewUrls, setPreviewUrls] = useState<string[]>(product?.imageUrls ?? []);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [thumbnailIndex, setThumbnailIndex] = useState<number>(product?.thumbnailIndex ?? 0);
+  const [isSold, setIsSold] = useState(product?.isSold ?? false);
 
   const [form, setForm] = useState({
     productCode: product?.productCode ?? "",
@@ -101,10 +104,6 @@ export function ProductFormModal({
     e.preventDefault();
     setError("");
 
-    if (!product && imageFiles.length === 0) {
-      setError("Please upload at least one product photo");
-      return;
-    }
     if (!form.productCode.trim()) {
       setError("Product ID is required");
       return;
@@ -122,11 +121,12 @@ export function ProductFormModal({
         imagePath: product?.imagePath ?? "",
         imagePaths: product?.imagePaths ?? [],
         thumbnailIndex,
+        isSold,
       };
 
       if (product && onUpdate) {
         await onUpdate(product.id, data, imageFiles.length ? imageFiles : undefined);
-      } else if (imageFiles.length) {
+      } else {
         await onSave(data, imageFiles);
       }
       onClose();
@@ -145,7 +145,7 @@ export function ProductFormModal({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Product Photos *</Label>
+            <Label>Product Photos</Label>
             <div className="mt-2 flex flex-wrap items-start gap-3">
               {previewUrls.map((preview, index) => (
                 <div key={`${preview}-${index}`} className="relative">
@@ -200,9 +200,26 @@ export function ProductFormModal({
               />
             </div>
             <p className="mt-2 text-xs text-stone-500">
-              Upload multiple photos and click one to set thumbnail.
+              Optional. Upload multiple photos and click one to set thumbnail.
             </p>
           </div>
+
+          <label className="flex items-start gap-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
+            <input
+              type="checkbox"
+              checked={isSold}
+              onChange={(e) => setIsSold(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-400"
+            />
+            <span>
+              <span className="block text-sm font-medium text-stone-900">
+                Sold offline
+              </span>
+              <span className="mt-0.5 block text-xs text-stone-500">
+                Mark items sold in-store without photos. They appear as sold out and count toward revenue.
+              </span>
+            </span>
+          </label>
 
           <div>
             <Label>Product ID *</Label>

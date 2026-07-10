@@ -107,7 +107,7 @@ export interface ProductFilters {
 
 export type ProductInput = Omit<
   Product,
-  "id" | "imageUrl" | "imageUrls" | "isSold" | "createdAt"
+  "id" | "imageUrl" | "imageUrls" | "createdAt"
 >;
 
 export function calcDiscountPercent(displayPrice: number, discountPrice: number): number {

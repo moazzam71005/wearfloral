@@ -6,6 +6,7 @@ import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { formatCurrency } from "@/lib/format";
 import { calcProfit } from "@/lib/types";
+import { sortProductsForDisplay } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +31,13 @@ export default function AdminProductsPage() {
     refreshProducts();
   }, [refreshProducts]);
 
-  const filtered = allProducts.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.productCode.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase())
+  const filtered = sortProductsForDisplay(
+    allProducts.filter(
+      (p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.productCode.toLowerCase().includes(search.toLowerCase()) ||
+        p.brand.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
   return (
@@ -80,7 +83,16 @@ export default function AdminProductsPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded bg-stone-100">
-                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                        {product.imageUrl ? (
+                          <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                        ) : (
+                          <Image
+                            src="/placeholder-product.svg"
+                            alt="No photo"
+                            fill
+                            className="object-cover"
+                          />
+                        )}
                       </div>
                       <div>
                         <p className="font-medium line-clamp-1">{product.name}</p>

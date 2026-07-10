@@ -5,14 +5,14 @@ import Link from "next/link";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/format";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/constants";
+import { calcShippingFee } from "@/lib/shipping";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function CartPage() {
   const { items, subtotal, removeItem, clearCart } = useCart();
 
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shipping = calcShippingFee(items.length);
   const total = subtotal + (items.length > 0 ? shipping : 0);
 
   if (items.length === 0) {

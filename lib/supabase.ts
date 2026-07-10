@@ -24,7 +24,7 @@ export const supabase = new Proxy({} as SupabaseClient, {
 });
 
 export function getProductImageUrl(imagePath: string): string {
-  if (!imagePath) return "/placeholder-product.png";
+  if (!imagePath) return "/placeholder-product.svg";
   if (imagePath.startsWith("http")) return imagePath;
   const client = getSupabaseClient();
   const { data } = client.storage.from("product-images").getPublicUrl(imagePath);

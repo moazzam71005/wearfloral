@@ -20,8 +20,9 @@ export const BRANDS = [
   "Others",
 ] as const;
 
-export const FREE_SHIPPING_THRESHOLD = 5000;
+export const FREE_SHIPPING_MIN_ITEMS = 3;
 export const SHIPPING_FEE = 250;
+export const FREE_SHIPPING_MESSAGE = "Free shipping on orders of 3 or more items";
 
 export const NAV_LINKS = [
   { href: "/", label: "Home" },

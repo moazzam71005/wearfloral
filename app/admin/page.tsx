@@ -26,15 +26,15 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminDashboardPage() {
-  const { products, orders, customers, refreshOrders, refreshCustomers } = useData();
+  const { allProducts, orders, customers, refreshOrders, refreshCustomers } = useData();
 
   useEffect(() => {
     refreshOrders();
     refreshCustomers();
   }, [refreshOrders, refreshCustomers]);
 
-  const stats = getDashboardStats(products, orders);
-  const chartData = useMemo(() => buildRevenueByDate(orders), [orders]);
+  const stats = getDashboardStats(allProducts, orders);
+  const chartData = useMemo(() => buildRevenueByDate(orders, allProducts), [orders, allProducts]);
 
   const recentOrders = useMemo(
     () =>

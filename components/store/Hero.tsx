@@ -28,11 +28,11 @@ export function Hero() {
               </p>
               <h1 className="mt-3 font-heading text-4xl font-bold leading-tight text-stone-900 sm:text-5xl lg:text-6xl">
                 Branded Fabrics,{" "}
-                <span className="text-rose-500">Curated</span> for You
+                <span className="text-rose-500">Discounted </span> Prices
               </h1>
               <p className="mt-4 max-w-md text-base text-stone-500 sm:text-lg">
-                Discover unique unstitched pieces from Sapphire, Gul Ahmed, Khaadi
-                and more — each piece is one of a kind.
+                Discover unique unstitched pieces from Sapphire, Gul Ahmed, Khaadi, Nishat
+                and more!
               </p>
             </div>
 
@@ -71,7 +71,7 @@ export function Hero() {
 
           <div className="relative aspect-square overflow-hidden rounded-3xl bg-rose-50 md:aspect-[4/5]">
             <Image
-              src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=900&q=85"
+              src="/T56A5773-scaled.png"
               alt="Wear Floral Fabrics"
               fill
               className="object-cover object-top"

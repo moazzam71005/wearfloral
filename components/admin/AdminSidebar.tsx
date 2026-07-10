@@ -44,9 +44,9 @@ export function AdminSidebar({ mobile, onClose }: AdminSidebarProps) {
           <Image
             src="/logo.png"
             alt="Wear Floral"
-            width={140}
-            height={56}
-            className="h-12 w-auto object-contain"
+            width={240}
+            height={96}
+            className="h-16 w-auto object-contain"
           />
         </Link>
         {mobile && onClose && (

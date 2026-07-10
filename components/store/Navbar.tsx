@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Menu, Search, ShoppingBag, User, X, LogOut } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
-import { NAV_LINKS } from "@/lib/constants";
+import { NAV_LINKS, FREE_SHIPPING_MESSAGE } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CartDrawer } from "./CartDrawer";
@@ -33,18 +33,18 @@ export function Navbar() {
   return (
     <>
       <div className="bg-rose-500 py-2 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
-        Free shipping on orders above PKR 5,000 &nbsp;·&nbsp; Premium unstitched fabrics
+        {FREE_SHIPPING_MESSAGE} &nbsp;·&nbsp; Premium unstitched fabrics
       </div>
 
       <header className="sticky top-0 z-50 border-b border-stone-100 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link href="/" className="shrink-0">
             <Image
               src="/logo.png"
               alt="Wear Floral"
-              width={180}
-              height={72}
-              className="h-14 w-auto object-contain"
+              width={280}
+              height={112}
+              className="h-20 w-auto object-contain sm:h-24"
               priority
             />
           </Link>
