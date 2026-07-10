@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Trash2 } from "lucide-react";
 
 interface ProductFormModalProps {
   open: boolean;
@@ -37,7 +38,9 @@ interface ProductFormModalProps {
     discountPrice: number;
     purchasePrice: number;
     imagePath: string;
-  }, imageFile: File) => Promise<void>;
+    imagePaths: string[];
+    thumbnailIndex: number;
+  }, imageFiles: File[]) => Promise<void>;
   onUpdate?: (
     id: string,
     data: Partial<{
@@ -50,8 +53,10 @@ interface ProductFormModalProps {
       discountPrice: number;
       purchasePrice: number;
       imagePath: string;
+      imagePaths: string[];
+      thumbnailIndex: number;
     }>,
-    imageFile?: File
+    imageFiles?: File[]
   ) => Promise<void>;
   product?: Product | null;
 }
@@ -66,8 +71,9 @@ export function ProductFormModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [preview, setPreview] = useState<string | null>(product?.imageUrl ?? null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>(product?.imageUrls ?? []);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [thumbnailIndex, setThumbnailIndex] = useState<number>(product?.thumbnailIndex ?? 0);
 
   const [form, setForm] = useState({
     productCode: product?.productCode ?? "",
@@ -84,18 +90,19 @@ export function ProductFormModal({
   const profit = form.discountPrice - form.purchasePrice;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
+    const selected = Array.from(e.target.files ?? []);
+    if (selected.length === 0) return;
+    setImageFiles(selected);
+    setPreviewUrls(selected.map((file) => URL.createObjectURL(file)));
+    setThumbnailIndex(0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!product && !imageFile) {
-      setError("Please upload a product photo");
+    if (!product && imageFiles.length === 0) {
+      setError("Please upload at least one product photo");
       return;
     }
     if (!form.productCode.trim()) {
@@ -113,12 +120,14 @@ export function ProductFormModal({
         ...form,
         name: form.name || `${form.brand} - ${form.productCode}`,
         imagePath: product?.imagePath ?? "",
+        imagePaths: product?.imagePaths ?? [],
+        thumbnailIndex,
       };
 
       if (product && onUpdate) {
-        await onUpdate(product.id, data, imageFile ?? undefined);
-      } else if (imageFile) {
-        await onSave(data, imageFile);
+        await onUpdate(product.id, data, imageFiles.length ? imageFiles : undefined);
+      } else if (imageFiles.length) {
+        await onSave(data, imageFiles);
       }
       onClose();
     } catch (err) {
@@ -136,24 +145,63 @@ export function ProductFormModal({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Product Photo *</Label>
-            <div className="mt-2 flex items-center gap-4">
-              {preview && (
-                <div className="relative h-24 w-20 overflow-hidden rounded-lg bg-stone-100">
-                  <Image src={preview} alt="Preview" fill className="object-cover" />
+            <Label>Product Photos *</Label>
+            <div className="mt-2 flex flex-wrap items-start gap-3">
+              {previewUrls.map((preview, index) => (
+                <div key={`${preview}-${index}`} className="relative">
+                  <button
+                    type="button"
+                    className={`relative h-24 w-20 overflow-hidden rounded-lg border-2 ${
+                      thumbnailIndex === index ? "border-rose-500" : "border-stone-200"
+                    } bg-stone-100`}
+                    onClick={() => setThumbnailIndex(index)}
+                    title="Set as thumbnail"
+                  >
+                    <Image src={preview} alt={`Preview ${index + 1}`} fill className="object-cover" />
+                  </button>
+                  {thumbnailIndex === index && (
+                    <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-rose-500">
+                      Thumbnail
+                    </span>
+                  )}
+                  {previewUrls.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white text-stone-600 shadow"
+                      onClick={() => {
+                        const newPreviews = previewUrls.filter((_, i) => i !== index);
+                        const newFiles = imageFiles.filter((_, i) => i !== index);
+                        setPreviewUrls(newPreviews);
+                        setImageFiles(newFiles);
+                        if (thumbnailIndex >= newPreviews.length) {
+                          setThumbnailIndex(Math.max(0, newPreviews.length - 1));
+                        } else if (index < thumbnailIndex) {
+                          setThumbnailIndex((prev) => prev - 1);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
-              )}
+              ))}
               <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
-                {preview ? "Change Photo" : "Upload Photo"}
+                {previewUrls.length ? "Replace Photos" : "Upload Photos"}
               </Button>
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={handleFileChange}
               />
             </div>
+            <p className="mt-2 text-xs text-stone-500">
+              Upload multiple photos and click one to set thumbnail.
+            </p>
           </div>
 
           <div>
@@ -205,8 +253,13 @@ export function ProductFormModal({
             <Textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="mt-1"
+              rows={8}
+              placeholder={"Fabric details, care notes, styling tips...\n\nPress Enter for new lines — formatting is preserved on the product page."}
+              className="mt-1 min-h-[160px] resize-y font-mono text-sm leading-relaxed"
             />
+            <p className="mt-1.5 text-xs text-stone-500">
+              Line breaks and spaces are saved exactly as you type them.
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

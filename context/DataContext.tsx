@@ -30,11 +30,11 @@ interface DataContextValue {
   refreshProducts: () => Promise<void>;
   refreshOrders: () => Promise<void>;
   refreshCustomers: () => Promise<void>;
-  addProduct: (data: ProductInput, imageFile: File) => Promise<void>;
+  addProduct: (data: ProductInput, imageFiles: File[]) => Promise<void>;
   updateProduct: (
     id: string,
     data: Partial<ProductInput>,
-    imageFile?: File
+    imageFiles?: File[]
   ) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
@@ -83,6 +83,16 @@ async function uploadProductImage(file: File, productCode: string): Promise<stri
     .upload(path, file, { upsert: true });
   if (error) throw error;
   return path;
+}
+
+async function uploadProductImages(files: File[], productCode: string): Promise<string[]> {
+  const paths: string[] = [];
+  for (const file of files) {
+    // Sequential upload avoids duplicate names caused by same timestamps.
+    const path = await uploadProductImage(file, productCode);
+    paths.push(path);
+  }
+  return paths;
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
@@ -170,10 +180,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [refreshProducts]);
 
   const addProduct = useCallback(
-    async (data: ProductInput, imageFile: File) => {
-      const imagePath = await uploadProductImage(imageFile, data.productCode);
+    async (data: ProductInput, imageFiles: File[]) => {
+      const uploadedPaths = await uploadProductImages(imageFiles, data.productCode);
+      const thumbnailIndex = Math.max(
+        0,
+        Math.min(data.thumbnailIndex ?? 0, Math.max(0, uploadedPaths.length - 1))
+      );
+      const imagePath = uploadedPaths[thumbnailIndex] ?? "";
       const { error: err } = await supabase.from("products").insert(
-        productToDb({ ...data, imagePath })
+        productToDb({
+          ...data,
+          imagePath,
+          imagePaths: uploadedPaths,
+          thumbnailIndex,
+        })
       );
       if (err) throw err;
       await refreshProducts();
@@ -182,11 +202,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateProduct = useCallback(
-    async (id: string, data: Partial<ProductInput>, imageFile?: File) => {
-      let imagePath = data.imagePath;
-      if (imageFile && data.productCode) {
-        imagePath = await uploadProductImage(imageFile, data.productCode);
+    async (id: string, data: Partial<ProductInput>, imageFiles?: File[]) => {
+      const existingProduct = allProducts.find((p) => p.id === id);
+      let imagePaths = data.imagePaths ?? existingProduct?.imagePaths ?? [];
+
+      if (imageFiles && imageFiles.length > 0 && data.productCode) {
+        imagePaths = await uploadProductImages(imageFiles, data.productCode);
       }
+
+      const thumbnailIndex = Math.max(
+        0,
+        Math.min(
+          data.thumbnailIndex ?? existingProduct?.thumbnailIndex ?? 0,
+          Math.max(0, imagePaths.length - 1)
+        )
+      );
+      const imagePath = imagePaths[thumbnailIndex] ?? data.imagePath ?? "";
+
       const updates = productToDb({
         productCode: data.productCode ?? "",
         name: data.name ?? "",
@@ -194,6 +226,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         volume: data.volume,
         description: data.description,
         imagePath,
+        imagePaths,
+        thumbnailIndex,
         displayPrice: data.displayPrice ?? 0,
         discountPrice: data.discountPrice ?? 0,
         purchasePrice: data.purchasePrice ?? 0,
@@ -205,7 +239,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (err) throw err;
       await refreshProducts();
     },
-    [refreshProducts]
+    [allProducts, refreshProducts]
   );
 
   const deleteProduct = useCallback(
@@ -216,7 +250,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (product?.imagePath) {
         await supabase.storage
           .from(PRODUCT_IMAGE_BUCKET)
-          .remove([product.imagePath]);
+          .remove(product.imagePaths?.length ? product.imagePaths : [product.imagePath]);
       }
       await refreshProducts();
     },

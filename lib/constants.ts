@@ -5,12 +5,19 @@ export const STORE_PHONE = "+92 300 0000000";
 export const STORE_LOCATION = "Lahore, Pakistan";
 
 export const BRANDS = [
-  "Sapphire",
+  "Bareezé",
+  "Bareeza",
   "Gul Ahmed",
-  "Khaadi",
+  "Ethnic",
+  "Sapphire",
+  "Mausummery",
   "Maria B",
-  "Alkaram",
-  "Wear Floral",
+  "Coco",
+  "Khaadi",
+  "Nishat",
+  "Orient",
+  "Saya",
+  "Others",
 ] as const;
 
 export const FREE_SHIPPING_THRESHOLD = 5000;

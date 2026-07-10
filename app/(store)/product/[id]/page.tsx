@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { useState } from "react";
 import { ShoppingBag, Truck, Loader2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useCart } from "@/context/CartContext";
@@ -21,6 +22,7 @@ export default function ProductDetailPage({
   const { products, allProducts, isLoading } = useData();
   const { addItem, hasItem } = useCart();
   const product = allProducts.find((p) => p.id === params.id);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   if (isLoading) {
     return (
@@ -61,7 +63,7 @@ export default function ProductDetailPage({
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-stone-100">
           <Image
-            src={product.imageUrl || "/placeholder-product.png"}
+            src={product.imageUrls[selectedImage] || product.imageUrl || "/placeholder-product.png"}
             alt={product.name}
             fill
             className="object-cover"
@@ -81,6 +83,22 @@ export default function ProductDetailPage({
             </div>
           )}
         </div>
+        {product.imageUrls.length > 1 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto">
+            {product.imageUrls.map((img, index) => (
+              <button
+                key={`${img}-${index}`}
+                type="button"
+                onClick={() => setSelectedImage(index)}
+                className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-md border-2 ${
+                  selectedImage === index ? "border-rose-500" : "border-stone-200"
+                }`}
+              >
+                <Image src={img} alt={`${product.name} ${index + 1}`} fill className="object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
 
         <div>
           <p className="text-sm uppercase tracking-wider text-stone-500">{product.brand}</p>
@@ -99,7 +117,16 @@ export default function ProductDetailPage({
             )}
           </div>
 
-          <p className="mt-6 text-sm leading-relaxed text-stone-600">{product.description}</p>
+          {product.description.trim() && (
+            <div className="mt-6 rounded-xl border border-stone-100 bg-stone-50/80 p-4 sm:p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500">
+                Description
+              </h2>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-stone-700">
+                {product.description}
+              </p>
+            </div>
+          )}
 
           <div className="mt-8">
             <Button

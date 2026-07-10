@@ -9,8 +9,10 @@
 
 1. **SQL Editor** → New query → paste `supabase/migrations/001_schema.sql` → Run
 2. **SQL Editor** → New query → paste `supabase/migrations/002_revamp.sql` → Run
+3. **SQL Editor** → New query → paste `supabase/migrations/003_multi_images.sql` → Run
 
 > Migration 002 drops and recreates tables with the new unstitched-fabric schema.
+> Migration 003 adds multiple product images + thumbnail selection support.
 
 ## 3. Add Admin User
 

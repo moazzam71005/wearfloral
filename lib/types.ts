@@ -14,6 +14,9 @@ export interface Product {
   description: string;
   imagePath: string;
   imageUrl: string;
+  imagePaths: string[];
+  imageUrls: string[];
+  thumbnailIndex: number;
   displayPrice: number;
   discountPrice: number;
   purchasePrice: number;
@@ -102,7 +105,10 @@ export interface ProductFilters {
   sort: SortOption;
 }
 
-export type ProductInput = Omit<Product, "id" | "imageUrl" | "isSold" | "createdAt">;
+export type ProductInput = Omit<
+  Product,
+  "id" | "imageUrl" | "imageUrls" | "isSold" | "createdAt"
+>;
 
 export function calcDiscountPercent(displayPrice: number, discountPrice: number): number {
   if (displayPrice <= 0 || discountPrice >= displayPrice) return 0;

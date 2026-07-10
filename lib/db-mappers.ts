@@ -9,6 +9,8 @@ export interface DbProduct {
   volume: string;
   description: string;
   image_path: string;
+  image_paths?: string[] | null;
+  thumbnail_index?: number | null;
   display_price: number;
   discount_price: number;
   purchase_price: number;
@@ -17,6 +19,22 @@ export interface DbProduct {
 }
 
 export function mapDbProduct(row: DbProduct): Product {
+  const imagePaths =
+    row.image_paths && row.image_paths.length > 0
+      ? row.image_paths
+      : row.image_path
+        ? [row.image_path]
+        : [];
+  const thumbnailIndex = Math.max(
+    0,
+    Math.min(row.thumbnail_index ?? 0, Math.max(0, imagePaths.length - 1))
+  );
+  const imageUrls = imagePaths.map((p) => getProductImageUrl(p));
+  const imageUrl =
+    imageUrls[thumbnailIndex] ??
+    imageUrls[0] ??
+    getProductImageUrl(row.image_path ?? "");
+
   return {
     id: row.id,
     productCode: row.product_code,
@@ -24,8 +42,11 @@ export function mapDbProduct(row: DbProduct): Product {
     brand: row.brand,
     volume: row.volume,
     description: row.description,
-    imagePath: row.image_path,
-    imageUrl: getProductImageUrl(row.image_path),
+    imagePath: imagePaths[thumbnailIndex] ?? row.image_path ?? "",
+    imageUrl,
+    imagePaths,
+    imageUrls,
+    thumbnailIndex,
     displayPrice: Number(row.display_price),
     discountPrice: Number(row.discount_price),
     purchasePrice: Number(row.purchase_price),
@@ -51,6 +72,8 @@ export function productToDb(
     volume: product.volume ?? "",
     description: product.description ?? "",
     image_path: product.imagePath ?? "",
+    image_paths: product.imagePaths ?? (product.imagePath ? [product.imagePath] : []),
+    thumbnail_index: product.thumbnailIndex ?? 0,
     display_price: product.displayPrice,
     discount_price: product.discountPrice,
     purchase_price: product.purchasePrice,
