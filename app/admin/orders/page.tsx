@@ -41,6 +41,15 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p className="font-medium">WhatsApp orders</p>
+        <p className="mt-1 text-emerald-800">
+          New checkouts arrive as <strong>Pending</strong> and do not mark pieces sold.
+          After payment proof on WhatsApp, set status to <strong>Processing</strong> (or Shipped / Delivered) — that marks the items sold out.
+          Use <strong>Cancelled</strong> if the customer does not complete payment.
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {statuses.map((status) => (
           <Button
@@ -82,6 +91,11 @@ export default function AdminOrdersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedOrder.status === "Pending" && (
+                    <p className="mt-2 text-xs text-stone-500">
+                      Waiting for WhatsApp confirmation. Move to Processing after payment proof to mark items sold.
+                    </p>
+                  )}
                 </div>
 
                 <div>

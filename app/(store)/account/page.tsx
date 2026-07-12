@@ -91,7 +91,9 @@ export default function AccountPage() {
                   <p className="text-xs text-stone-500">{formatDate(order.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge className={statusColors[order.status]}>{order.status}</Badge>
+                  <Badge className={statusColors[order.status]}>
+                    {order.status === "Pending" ? "Awaiting WhatsApp" : order.status}
+                  </Badge>
                   <span className="font-semibold">{formatCurrency(order.total)}</span>
                 </div>
               </div>

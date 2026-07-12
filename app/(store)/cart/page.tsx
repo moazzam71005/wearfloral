@@ -76,8 +76,8 @@ export default function CartPage() {
               <span>{formatCurrency(total)}</span>
             </div>
           </div>
-          <Button className="mt-6 w-full bg-rose-500 hover:bg-rose-600 text-white" size="lg" asChild>
-            <Link href="/checkout">Proceed to Checkout</Link>
+          <Button className="mt-6 w-full gap-2 bg-[#25D366] text-white hover:bg-[#1ebe57]" size="lg" asChild>
+            <Link href="/checkout">Proceed to WhatsApp Checkout</Link>
           </Button>
         </div>
       </div>

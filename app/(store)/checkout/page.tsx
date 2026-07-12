@@ -4,13 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, MessageCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { useData } from "@/context/DataContext";
+import { CHECKOUT_NOTE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { calcShippingFee } from "@/lib/shipping";
 import type { Order, OrderItem } from "@/lib/types";
+import { buildWhatsAppOrderUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,12 +26,13 @@ import {
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
-  const { placeOrder, products, allProducts } = useData();
+  const { placeOrder, allProducts } = useData();
   const { isAuthenticated, isLoading, profile, user } = useCustomerAuth();
   const router = useRouter();
 
   const [placed, setPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -90,7 +93,7 @@ export default function CheckoutPage() {
     try {
       const id = `ORD-${Date.now()}`;
       const orderItems: OrderItem[] = items.map((item) => {
-        const product = products.find((p) => p.id === item.productId);
+        const product = allProducts.find((p) => p.id === item.productId);
         return {
           productId: item.productId,
           name: item.name,
@@ -118,12 +121,35 @@ export default function CheckoutPage() {
         status: "Pending",
       };
 
-      await placeOrder(order);
+      // Save as Pending — do not mark products sold until you confirm in admin.
+      await placeOrder(order, { markSold: false });
+
+      const url = buildWhatsAppOrderUrl({
+        orderId: id,
+        items: items.map((item) => {
+          const product = allProducts.find((p) => p.id === item.productId);
+          return {
+            ...item,
+            productCode: product?.productCode,
+            brand: product?.brand,
+          };
+        }),
+        subtotal,
+        shipping,
+        total,
+        customerName: form.name,
+        customerPhone: form.phone,
+        address: form.address,
+        city: form.city,
+      });
+
       clearCart();
       setOrderId(id);
+      setWhatsappUrl(url);
       setPlaced(true);
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to place order");
+      setError(err instanceof Error ? err.message : "Failed to start WhatsApp order");
     } finally {
       setSubmitting(false);
     }
@@ -152,17 +178,29 @@ export default function CheckoutPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
         <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
-        <h1 className="mt-4 text-2xl font-bold">Order Placed!</h1>
+        <h1 className="mt-4 text-2xl font-bold">Order request saved</h1>
         <p className="mt-2 text-stone-500">
           Your order ID is{" "}
           <span className="font-semibold text-stone-900">{orderId}</span>
         </p>
+        <p className="mt-3 text-sm text-stone-500">
+          Complete the chat on WhatsApp so we can confirm availability and payment.
+          Your pieces stay reserved only after we confirm payment proof.
+        </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button className="bg-rose-500 hover:bg-rose-600 text-white" asChild>
-            <Link href="/account">View Orders</Link>
+          {whatsappUrl && (
+            <Button className="bg-[#25D366] hover:bg-[#1ebe57] text-white gap-2" asChild>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="h-4 w-4" />
+                Open WhatsApp again
+              </a>
+            </Button>
+          )}
+          <Button variant="outline" asChild>
+            <Link href="/account">View my orders</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/shop">Continue Shopping</Link>
+            <Link href="/shop">Continue shopping</Link>
           </Button>
         </div>
       </div>
@@ -172,6 +210,7 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-stone-900">Checkout</h1>
+      <p className="mt-2 max-w-2xl text-sm text-stone-500">{CHECKOUT_NOTE}</p>
 
       <form onSubmit={handleSubmit} className="mt-8 grid gap-8 lg:grid-cols-2">
         <div className="space-y-6">
@@ -203,23 +242,26 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
-            <p className="text-sm text-stone-600">
-              Payment on delivery (Cash on Delivery).
-            </p>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-sm font-medium text-emerald-900">How payment works</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm text-emerald-800">
+              <li>Tap Order on WhatsApp — your cart details are sent automatically.</li>
+              <li>We’ll confirm the pieces and share payment details (JazzCash / EasyPaisa / bank).</li>
+              <li>Send payment proof in the chat, then we ship your order.</li>
+            </ol>
           </div>
         </div>
 
-        <div className="rounded-xl border border-stone-200 p-6 h-fit">
+        <div className="h-fit rounded-xl border border-stone-200 p-6">
           <h2 className="text-lg font-semibold">Order Summary</h2>
           <div className="mt-4 space-y-3">
             {items.map((item) => (
               <div key={item.productId} className="flex gap-3">
                 <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded bg-stone-100">
-                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                  <Image src={item.imageUrl || "/placeholder-product.svg"} alt={item.name} fill className="object-cover" />
                 </div>
                 <div className="flex-1 text-sm">
-                  <p className="font-medium line-clamp-1">{item.name}</p>
+                  <p className="line-clamp-1 font-medium">{item.name}</p>
                 </div>
                 <p className="text-sm font-medium">
                   {formatCurrency(item.discountPrice)}
@@ -238,7 +280,7 @@ export default function CheckoutPage() {
               <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
             </div>
             <Separator />
-            <div className="flex justify-between font-semibold text-lg">
+            <div className="flex justify-between text-lg font-semibold">
               <span>Total</span>
               <span>{formatCurrency(total)}</span>
             </div>
@@ -252,11 +294,18 @@ export default function CheckoutPage() {
             type="submit"
             size="lg"
             disabled={submitting}
-            className="mt-6 w-full bg-rose-500 hover:bg-rose-600 text-white"
+            className="mt-6 w-full gap-2 bg-[#25D366] text-white hover:bg-[#1ebe57]"
           >
-            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Place Order
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageCircle className="h-4 w-4" />
+            )}
+            {submitting ? "Preparing…" : "Order on WhatsApp"}
           </Button>
+          <p className="mt-3 text-center text-xs text-stone-400">
+            Opens WhatsApp with your order details pre-filled
+          </p>
         </div>
       </form>
     </div>

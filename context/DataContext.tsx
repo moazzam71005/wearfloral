@@ -40,7 +40,10 @@ interface DataContextValue {
   deleteProduct: (id: string) => Promise<void>;
   markProductSold: (id: string) => Promise<void>;
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
-  placeOrder: (order: Omit<Order, "createdAt" | "updatedAt">) => Promise<void>;
+  placeOrder: (
+    order: Omit<Order, "createdAt" | "updatedAt">,
+    options?: { markSold?: boolean }
+  ) => Promise<void>;
   fetchCustomerOrders: (customerId: string) => Promise<Order[]>;
 }
 
@@ -278,18 +281,31 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const updateOrderStatus = useCallback(
     async (id: string, status: OrderStatus) => {
+      const existing = orders.find((o) => o.id === id);
       const { error: err } = await supabase
         .from("orders")
         .update({ status })
         .eq("id", id);
       if (err) throw err;
+
+      // Confirming payment / shipping: mark unique pieces sold.
+      const confirmStatuses: OrderStatus[] = ["Processing", "Shipped", "Delivered"];
+      if (existing && confirmStatuses.includes(status) && existing.items.length > 0) {
+        const productIds = existing.items.map((i) => i.productId);
+        await supabase.from("products").update({ is_sold: true }).in("id", productIds);
+        await refreshProducts();
+      }
+
       await refreshOrders();
     },
-    [refreshOrders]
+    [orders, refreshOrders, refreshProducts]
   );
 
   const placeOrder = useCallback(
-    async (order: Omit<Order, "createdAt" | "updatedAt">) => {
+    async (
+      order: Omit<Order, "createdAt" | "updatedAt">,
+      options?: { markSold?: boolean }
+    ) => {
       const { error: orderErr } = await supabase.from("orders").insert({
         id: order.id,
         customer_id: order.customerId,
@@ -322,14 +338,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         .insert(orderItems);
       if (itemsErr) throw itemsErr;
 
-      const productIds = order.items.map((i) => i.productId);
-      const { error: soldErr } = await supabase
-        .from("products")
-        .update({ is_sold: true })
-        .in("id", productIds);
-      if (soldErr) throw soldErr;
+      // WhatsApp checkout keeps pieces available until you confirm in admin.
+      if (options?.markSold) {
+        const productIds = order.items.map((i) => i.productId);
+        const { error: soldErr } = await supabase
+          .from("products")
+          .update({ is_sold: true })
+          .in("id", productIds);
+        if (soldErr) throw soldErr;
+        await refreshProducts();
+      }
 
-      await refreshProducts();
       await refreshOrders();
     },
     [refreshProducts, refreshOrders]
