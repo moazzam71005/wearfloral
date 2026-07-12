@@ -1,8 +1,8 @@
 export const STORE_NAME = "Wear Floral";
 export const STORE_TAGLINE = "Premium Unstitched Fabrics from Renowned Brands";
 export const STORE_EMAIL = "saleswearfloral@gmail.com";
-export const STORE_PHONE = "+92 300 0000000";
-export const STORE_LOCATION = "Lahore, Pakistan";
+export const STORE_PHONE = "+92 319 8555335";
+export const STORE_LOCATION = "Pakistan";
 
 export const BRANDS = [
   "Bareezé",

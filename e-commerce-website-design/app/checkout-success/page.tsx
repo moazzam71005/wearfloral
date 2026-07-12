@@ -73,7 +73,7 @@ export default function CheckoutSuccessPage() {
           {/* Info */}
           <div className="bg-secondary p-4 rounded-lg text-sm text-muted-foreground">
             <p className="mb-2 font-semibold text-foreground">Need Help?</p>
-            <p>Contact us at support@wearfloral.com or call +92 300 1234567</p>
+            <p>Contact us at saleswearfloral@gmail.com or call +92 319 8555335</p>
           </div>
         </div>
       </div>
