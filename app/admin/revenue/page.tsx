@@ -17,7 +17,9 @@ export default function AdminRevenuePage() {
     refreshOrders();
   }, [refreshOrders]);
 
-  const completedOrders = orders.filter((o) => o.status !== "Cancelled");
+  const completedOrders = orders.filter(
+    (o) => o.status === "Processing" || o.status === "Shipped" || o.status === "Delivered"
+  );
   const offlineTotals = getOfflineSalesTotals(allProducts, orders);
   const totalSales =
     completedOrders.reduce((sum, o) => sum + o.total, 0) + offlineTotals.revenue;
@@ -27,7 +29,7 @@ export default function AdminRevenuePage() {
       0
     ) + offlineTotals.profit;
   const aov = completedOrders.length > 0 ? totalSales / completedOrders.length : 0;
-  const refunds = orders.filter((o) => o.status === "Cancelled").reduce((sum, o) => sum + o.total, 0);
+  const cancelledCount = orders.filter((o) => o.status === "Cancelled").length;
 
   const chartData = useMemo(() => buildRevenueByDate(orders, allProducts), [orders, allProducts]);
   const brandData = useMemo(() => buildRevenueByBrand(orders, allProducts), [orders, allProducts]);
@@ -38,7 +40,7 @@ export default function AdminRevenuePage() {
         <StatsCard title="Total Sales" value={formatCurrency(totalSales)} icon={DollarSign} />
         <StatsCard title="Total Profit" value={formatCurrency(totalProfit)} icon={TrendingUp} trendUp />
         <StatsCard title="Avg Order Value" value={formatCurrency(aov)} icon={TrendingUp} />
-        <StatsCard title="Refunds" value={formatCurrency(refunds)} icon={RefreshCw} />
+        <StatsCard title="Cancelled Orders" value={String(cancelledCount)} icon={RefreshCw} />
       </div>
 
       <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">

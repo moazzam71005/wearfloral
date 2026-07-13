@@ -22,7 +22,7 @@ export function getDashboardStats(
   ).length;
 
   const completedOrders = orders.filter(
-    (o) => o.status === "Delivered" || o.status === "Shipped"
+    (o) => o.status === "Delivered" || o.status === "Shipped" || o.status === "Processing"
   );
 
   const orderRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
@@ -54,7 +54,12 @@ export function buildRevenueByDate(orders: Order[], products: Product[] = []) {
   const map = new Map<string, { revenue: number; profit: number; orders: number }>();
 
   orders
-    .filter((o) => o.status !== "Cancelled")
+    .filter(
+      (o) =>
+        o.status === "Processing" ||
+        o.status === "Shipped" ||
+        o.status === "Delivered"
+    )
     .forEach((order) => {
       const date = new Date(order.createdAt).toLocaleDateString("en-US", {
         month: "short",
@@ -94,7 +99,12 @@ export function buildRevenueByBrand(orders: Order[], products: Product[] = []) {
   const map = new Map<string, { revenue: number; profit: number }>();
 
   orders
-    .filter((o) => o.status !== "Cancelled")
+    .filter(
+      (o) =>
+        o.status === "Processing" ||
+        o.status === "Shipped" ||
+        o.status === "Delivered"
+    )
     .forEach((order) => {
       order.items.forEach((item) => {
         const current = map.get(item.brand) ?? { revenue: 0, profit: 0 };

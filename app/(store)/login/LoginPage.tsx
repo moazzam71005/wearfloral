@@ -50,7 +50,9 @@ export default function LoginPage() {
         <Image src="/logo.png" alt="Wear Floral" width={280} height={112} className="h-20 w-auto sm:h-24" />
       </div>
       <h1 className="text-center text-2xl font-bold text-stone-900">Welcome Back</h1>
-      <p className="mt-2 text-center text-sm text-stone-500">Sign in to place your order</p>
+      <p className="mt-2 text-center text-sm text-stone-500">
+        Sign in with your verified email to place your order
+      </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>

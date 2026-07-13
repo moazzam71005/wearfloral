@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { useData } from "@/context/DataContext";
 import { CHECKOUT_NOTE } from "@/lib/constants";
+import { formatAuthError, isEmailVerified } from "@/lib/auth-errors";
 import { formatCurrency } from "@/lib/format";
 import { calcShippingFee } from "@/lib/shipping";
 import type { Order, OrderItem } from "@/lib/types";
@@ -27,7 +28,7 @@ import {
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const { placeOrder, allProducts } = useData();
-  const { isAuthenticated, isLoading, profile, user } = useCustomerAuth();
+  const { isAuthenticated, isLoading, profile, user, signOut } = useCustomerAuth();
   const router = useRouter();
 
   const [placed, setPlaced] = useState(false);
@@ -84,6 +85,13 @@ export default function CheckoutPage() {
     );
     if (soldInCart.length > 0) {
       setError("One or more items in your cart are no longer available.");
+      return;
+    }
+
+    if (!isEmailVerified(user)) {
+      setError(
+        "Please verify your email before checkout. Open the confirmation link we sent when you signed up, then sign in again."
+      );
       return;
     }
 
@@ -149,7 +157,8 @@ export default function CheckoutPage() {
       setPlaced(true);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start WhatsApp order");
+      const raw = err instanceof Error ? err.message : "Failed to start WhatsApp order";
+      setError(formatAuthError(raw));
     } finally {
       setSubmitting(false);
     }
@@ -211,6 +220,16 @@ export default function CheckoutPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-stone-900">Checkout</h1>
       <p className="mt-2 max-w-2xl text-sm text-stone-500">{CHECKOUT_NOTE}</p>
+
+      {user && !isEmailVerified(user) && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-medium">Email not verified</p>
+          <p className="mt-1">
+            Please open the confirmation link sent to{" "}
+            <strong>{user.email}</strong>, then sign in again before ordering on WhatsApp.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-8 grid gap-8 lg:grid-cols-2">
         <div className="space-y-6">
@@ -287,7 +306,35 @@ export default function CheckoutPage() {
           </div>
 
           {error && (
-            <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
+            <div className="mt-4 space-y-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+              <p>{error}</p>
+              {(error.toLowerCase().includes("verify your email") ||
+                error.toLowerCase().includes("confirmed")) && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 bg-white text-red-700 hover:bg-red-50"
+                    asChild
+                  >
+                    <Link href="/login?next=/checkout">Sign in after verifying</Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-700"
+                    onClick={async () => {
+                      await signOut();
+                      router.push("/signup?next=/checkout");
+                    }}
+                  >
+                    Use a different account
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
 
           <Button

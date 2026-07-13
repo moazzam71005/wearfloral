@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { formatAuthError, isEmailVerified } from "@/lib/auth-errors";
 import type { Profile } from "@/lib/types";
 
 interface SignUpData {
@@ -21,15 +22,21 @@ interface SignUpData {
   city: string;
 }
 
+export type SignUpResult =
+  | { ok: true; needsVerification: boolean; email: string }
+  | { ok: false };
+
 interface CustomerAuthContextValue {
   user: User | null;
   profile: Profile | null;
   isAuthenticated: boolean;
+  isEmailVerified: boolean;
   isLoading: boolean;
   error: string;
-  signUp: (data: SignUpData) => Promise<boolean>;
+  signUp: (data: SignUpData) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<boolean>;
   updateProfile: (updates: Partial<Profile>) => Promise<boolean>;
   clearError: () => void;
 }
@@ -97,14 +104,20 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     return () => listener.subscription.unsubscribe();
   }, [loadProfile]);
 
-  const signUp = useCallback(async (data: SignUpData) => {
+  const signUp = useCallback(async (data: SignUpData): Promise<SignUpResult> => {
     setError("");
     setIsLoading(true);
     try {
+      const emailRedirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/login`
+          : undefined;
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo,
           data: {
             name: data.name,
             phone: data.phone,
@@ -114,18 +127,28 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         },
       });
       if (authError) {
-        setError(authError.message);
-        return false;
+        setError(formatAuthError(authError.message));
+        return { ok: false };
       }
       if (!authData.user) {
         setError("Signup failed. Please try again.");
-        return false;
+        return { ok: false };
       }
+
+      // Supabase returns empty identities when the email is already registered.
+      if (authData.user.identities && authData.user.identities.length === 0) {
+        setError(
+          "An account with this email already exists. Please sign in, or check your inbox if you still need to verify."
+        );
+        return { ok: false };
+      }
+
       if (isAdminUser(authData.user)) {
         await supabase.auth.signOut();
         setError("Invalid account type.");
-        return false;
+        return { ok: false };
       }
+
       await supabase
         .from("profiles")
         .update({
@@ -135,12 +158,23 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
           city: data.city,
         })
         .eq("id", authData.user.id);
+
+      const needsVerification = !authData.session || !isEmailVerified(authData.user);
+
+      if (needsVerification) {
+        // Do not treat as signed in until email is confirmed.
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        return { ok: true, needsVerification: true, email: data.email };
+      }
+
       setUser(authData.user);
       await loadProfile(authData.user.id);
-      return true;
+      return { ok: true, needsVerification: false, email: data.email };
     } catch {
       setError("An unexpected error occurred.");
-      return false;
+      return { ok: false };
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +189,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         password,
       });
       if (authError) {
-        setError(authError.message);
+        setError(formatAuthError(authError.message));
         return false;
       }
       if (!data.user) {
@@ -165,6 +199,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       if (isAdminUser(data.user)) {
         await supabase.auth.signOut();
         setError("Please use the admin login page.");
+        return false;
+      }
+      if (!isEmailVerified(data.user)) {
+        await supabase.auth.signOut();
+        setError(
+          "Please verify your email first. Open the confirmation link we sent to your inbox, then sign in again."
+        );
         return false;
       }
       setUser(data.user);
@@ -177,6 +218,30 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       setIsLoading(false);
     }
   }, [loadProfile]);
+
+  const resendVerificationEmail = useCallback(async (email: string) => {
+    setError("");
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/login`
+              : undefined,
+        },
+      });
+      if (resendError) {
+        setError(formatAuthError(resendError.message));
+        return false;
+      }
+      return true;
+    } catch {
+      setError("Could not resend the email. Please try again.");
+      return false;
+    }
+  }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
@@ -208,15 +273,27 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       user,
       profile,
       isAuthenticated: !!user,
+      isEmailVerified: isEmailVerified(user),
       isLoading,
       error,
       signUp,
       signIn,
       signOut,
+      resendVerificationEmail,
       updateProfile,
       clearError: () => setError(""),
     }),
-    [user, profile, isLoading, error, signUp, signIn, signOut, updateProfile]
+    [
+      user,
+      profile,
+      isLoading,
+      error,
+      signUp,
+      signIn,
+      signOut,
+      resendVerificationEmail,
+      updateProfile,
+    ]
   );
 
   return (

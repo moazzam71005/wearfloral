@@ -288,11 +288,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         .eq("id", id);
       if (err) throw err;
 
+      const productIds = existing?.items.map((i) => i.productId) ?? [];
+
       // Confirming payment / shipping: mark unique pieces sold.
       const confirmStatuses: OrderStatus[] = ["Processing", "Shipped", "Delivered"];
-      if (existing && confirmStatuses.includes(status) && existing.items.length > 0) {
-        const productIds = existing.items.map((i) => i.productId);
+      if (existing && confirmStatuses.includes(status) && productIds.length > 0) {
         await supabase.from("products").update({ is_sold: true }).in("id", productIds);
+        await refreshProducts();
+      }
+
+      // Cancelled = not approved / no payment — put pieces back on the shop.
+      if (existing && status === "Cancelled" && productIds.length > 0) {
+        await supabase.from("products").update({ is_sold: false }).in("id", productIds);
         await refreshProducts();
       }
 
@@ -319,7 +326,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         total: order.total,
         status: order.status,
       });
-      if (orderErr) throw orderErr;
+      if (orderErr) throw new Error(orderErr.message);
 
       const orderItems = order.items.map((item) => ({
         order_id: order.id,
@@ -336,7 +343,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const { error: itemsErr } = await supabase
         .from("order_items")
         .insert(orderItems);
-      if (itemsErr) throw itemsErr;
+      if (itemsErr) throw new Error(itemsErr.message);
 
       // WhatsApp checkout keeps pieces available until you confirm in admin.
       if (options?.markSold) {
@@ -345,7 +352,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           .from("products")
           .update({ is_sold: true })
           .in("id", productIds);
-        if (soldErr) throw soldErr;
+        if (soldErr) throw new Error(soldErr.message);
         await refreshProducts();
       }
 

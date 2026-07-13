@@ -46,7 +46,7 @@ export default function AdminOrdersPage() {
         <p className="mt-1 text-emerald-800">
           New checkouts arrive as <strong>Pending</strong> and do not mark pieces sold.
           After payment proof on WhatsApp, set status to <strong>Processing</strong> (or Shipped / Delivered) — that marks the items sold out.
-          Use <strong>Cancelled</strong> if the customer does not complete payment.
+          Use <strong>Cancelled</strong> if you do not approve the order (no payment). Cancelled orders do not count as refunds, and the pieces go back on the shop.
         </p>
       </div>
 
@@ -67,10 +67,10 @@ export default function AdminOrdersPage() {
       <OrdersTable orders={sorted} onSelect={setSelectedOrder} />
 
       <Sheet open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+        <SheetContent className="w-full overflow-y-auto px-6 sm:max-w-md sm:px-8">
           {selectedOrder && (
             <>
-              <SheetHeader>
+              <SheetHeader className="px-0">
                 <SheetTitle>Order {selectedOrder.id}</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-4">

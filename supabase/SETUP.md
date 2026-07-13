@@ -43,6 +43,75 @@ Migration 002 creates the `product-images` bucket automatically. Verify in **Sto
 - Admin: `/admin/login` with admin credentials
 - Customer: sign up at `/signup`, add items to cart, checkout at `/checkout`
 
+## 7. Custom SMTP + branded confirmation email
+
+Supabase’s built-in mailer **does not let you edit HTML templates** until custom SMTP is enabled.
+You also need this for production (the free mailer is limited to a couple of emails per hour).
+
+### A. Easiest free option: Resend
+
+1. Create an account at [resend.com](https://resend.com)
+2. **Domains** → add a domain you own (e.g. `wearfloral.com`) → add the DNS records they show → wait until verified  
+   - If you don’t have a domain yet, Resend lets you send from their test domain for trying, but deliverability is better with your own domain.
+3. **API Keys** → Create API Key → copy it
+
+### B. Paste SMTP into Supabase
+
+Go to: **Authentication → Emails → SMTP Settings**  
+(or `https://supabase.com/dashboard/project/_/auth/smtp`)
+
+| Field | Value |
+|--------|--------|
+| Enable Custom SMTP | On |
+| Sender email | e.g. `noreply@yourdomain.com` (must match Resend) |
+| Sender name | `Wear Floral` |
+| Host | `smtp.resend.com` |
+| Port | `465` (or `587`) |
+| Username | `resend` |
+| Password | your Resend API key |
+
+Save.
+
+### C. Edit the Confirm signup template
+
+After SMTP is saved, open **Authentication → Email Templates → Confirm signup**:
+
+1. **Subject:** `Confirm your Wear Floral account`
+2. Paste the HTML from `supabase/email-templates/confirm-signup.html`
+3. Keep `{{ .ConfirmationURL }}` unchanged
+4. Save
+
+### D. URL config
+
+**Authentication → URL Configuration**
+
+- Site URL = your live site (or `http://localhost:3000` locally)
+- Redirect URLs include localhost + your Vercel URL with `/**`
+
+### Without buying a domain (your case)
+
+You **cannot** freely pick any sender address (e.g. `orders@wearfloral.com`) without owning that domain — providers block it, and spam filters treat it as spoofing.
+
+**Free option that works:** Gmail SMTP with your real Gmail:
+
+| Field | Value |
+|--------|--------|
+| Sender email | `saleswearfloral@gmail.com` |
+| Sender name | `Wear Floral` |
+| Host | `smtp.gmail.com` |
+| Port | `465` |
+| Username | `saleswearfloral@gmail.com` |
+| Password | Gmail **App Password** |
+
+You can still customize the HTML template after SMTP is connected. The “From” name will show as **Wear Floral**, address as `saleswearfloral@gmail.com`.
+
+**About spam:** without your own domain, some inbox providers will still filter auth emails. Reduce spam risk by:
+1. Asking customers to check Spam / Promotions once and mark **Not spam**
+2. Keeping subject/body simple (our template is already mild)
+3. Sending from Gmail SMTP (above), not a random “any email”
+
+Resend/Brevo free tiers without a domain only allow their shared test senders (often worse spam). Gmail is the best free path for you right now.
+
 ## Tables
 
 | Table | Purpose |

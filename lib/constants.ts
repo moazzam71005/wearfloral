@@ -3,7 +3,7 @@ export const STORE_TAGLINE = "Premium Unstitched Fabrics from Renowned Brands";
 export const STORE_EMAIL = "saleswearfloral@gmail.com";
 export const STORE_PHONE = "+92 319 8555335";
 /** WhatsApp number for order chats (same as store phone unless you change it). */
-export const STORE_WHATSAPP_NUMBER = "+92 333 7255499";
+export const STORE_WHATSAPP_NUMBER = "+92 319 8555335";
 export const STORE_LOCATION = "Pakistan";
 export const CHECKOUT_NOTE =
   "Orders are confirmed on WhatsApp. We’ll share payment details there — please send proof before we ship. Items stay available until we confirm your order.";
