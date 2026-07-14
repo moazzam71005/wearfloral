@@ -1,164 +1,75 @@
-"use client";
+import type { Metadata } from "next";
+import { createClient } from "@supabase/supabase-js";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { mapDbProduct, type DbProduct } from "@/lib/db-mappers";
+import { absoluteUrl, buildPageMetadata, productJsonLd } from "@/lib/seo";
+import ProductDetailClient from "./ProductDetailClient";
 
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { useState } from "react";
-import { ShoppingBag, Truck, Loader2 } from "lucide-react";
-import { useData } from "@/context/DataContext";
-import { useCart } from "@/context/CartContext";
-import { getRelatedProducts } from "@/lib/filters";
-import { formatCurrency } from "@/lib/format";
-import { calcDiscountPercent, getStorefrontPrice } from "@/lib/types";
-import { FREE_SHIPPING_MESSAGE } from "@/lib/constants";
-import { ProductCard } from "@/components/store/ProductCard";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+type Props = { params: { id: string } };
 
-export default function ProductDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { products, allProducts, isLoading } = useData();
-  const { addItem, hasItem } = useCart();
-  const product = allProducts.find((p) => p.id === params.id);
-  const [selectedImage, setSelectedImage] = useState(0);
+async function fetchProduct(id: string) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
-      </div>
-    );
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapDbProduct(data as DbProduct);
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const product = await fetchProduct(params.id);
+  if (!product) {
+    return buildPageMetadata({
+      title: "Product",
+      description: "Browse premium unstitched fabrics at Wear Floral.",
+      path: `/product/${params.id}`,
+    });
   }
 
-  if (!product) notFound();
+  const description =
+    product.description?.trim().slice(0, 160) ||
+    `${product.brand} ${product.volume || "unstitched fabric"} — ${product.name}. Shop unique pieces at Wear Floral.`;
 
-  const discount = calcDiscountPercent(product.displayPrice, product.discountPrice);
-  const related = getRelatedProducts(products, product);
-  const inCart = hasItem(product.id);
-  const soldOut = product.isSold;
-  const storefrontPrice = getStorefrontPrice(product);
+  return buildPageMetadata({
+    title: `${product.name} | ${product.brand}`,
+    description,
+    path: `/product/${product.id}`,
+    image: product.imageUrl || "/logo.png",
+  });
+}
 
-  const handleAddToCart = () => {
-    if (soldOut || inCart) return;
-    addItem({
-      productId: product.id,
-      name: product.name,
-      imageUrl: product.imageUrl,
-      discountPrice: product.discountPrice,
-      displayPrice: product.displayPrice,
-    });
-  };
+export default async function ProductPage({ params }: Props) {
+  const product = await fetchProduct(params.id);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <nav className="mb-6 text-sm text-stone-500">
-        <Link href="/" className="hover:text-rose-500">Home</Link>
-        <span className="mx-2">/</span>
-        <Link href="/shop" className="hover:text-rose-500">Shop</Link>
-        <span className="mx-2">/</span>
-        <span className="text-stone-900">{product.name}</span>
-      </nav>
-
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-stone-100">
-          <Image
-            src={product.imageUrls[selectedImage] || product.imageUrl || "/placeholder-product.svg"}
-            alt={product.name}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
-          {discount > 0 && !soldOut && (
-            <Badge className="absolute left-4 top-4 bg-rose-500 text-white">
-              -{discount}%
-            </Badge>
-          )}
-          {soldOut && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-full bg-white px-6 py-2 text-lg font-bold text-stone-900">
-                Sold Out
-              </span>
-            </div>
-          )}
-        </div>
-        {product.imageUrls.length > 1 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto">
-            {product.imageUrls.map((img, index) => (
-              <button
-                key={`${img}-${index}`}
-                type="button"
-                onClick={() => setSelectedImage(index)}
-                className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-md border-2 ${
-                  selectedImage === index ? "border-rose-500" : "border-stone-200"
-                }`}
-              >
-                <Image src={img} alt={`${product.name} ${index + 1}`} fill className="object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div>
-          <p className="text-sm uppercase tracking-wider text-stone-500">{product.brand}</p>
-          <h1 className="mt-2 text-2xl font-bold text-stone-900 sm:text-3xl">{product.name}</h1>
-          <p className="mt-1 text-sm text-stone-500">ID: {product.productCode}</p>
-          <p className="mt-1 text-sm font-medium text-stone-700">{product.volume}</p>
-
-          <div className="mt-4 flex items-center gap-3">
-            <span className="text-2xl font-bold text-stone-900">
-              {formatCurrency(storefrontPrice)}
-            </span>
-            {!soldOut && discount > 0 && (
-              <span className="text-lg text-stone-400 line-through">
-                {formatCurrency(product.displayPrice)}
-              </span>
-            )}
-          </div>
-
-          {product.description.trim() && (
-            <div className="mt-6 rounded-xl border border-stone-100 bg-stone-50/80 p-4 sm:p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500">
-                Description
-              </h2>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-stone-700">
-                {product.description}
-              </p>
-            </div>
-          )}
-
-          <div className="mt-8">
-            <Button
-              size="lg"
-              className="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white gap-2"
-              onClick={handleAddToCart}
-              disabled={soldOut || inCart}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {soldOut ? "Sold Out" : inCart ? "In Cart" : "Add to Cart"}
-            </Button>
-          </div>
-
-          <div className="mt-6 flex items-center gap-2 rounded-lg bg-stone-50 p-4 text-sm text-stone-600">
-            <Truck className="h-5 w-5 text-rose-400" />
-            {FREE_SHIPPING_MESSAGE}
-          </div>
-        </div>
-      </div>
-
-      {related.length > 0 && (
-        <section className="mt-16">
-          <h2 className="text-2xl font-bold text-stone-900">More from {product.brand}</h2>
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
+    <>
+      {product && (
+        <JsonLd
+          data={productJsonLd({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            imageUrl: product.imageUrl
+              ? product.imageUrl.startsWith("http")
+                ? product.imageUrl
+                : absoluteUrl(product.imageUrl)
+              : absoluteUrl("/logo.png"),
+            brand: product.brand,
+            productCode: product.productCode,
+            discountPrice: product.discountPrice,
+            displayPrice: product.displayPrice,
+            isSold: product.isSold,
+          })}
+        />
       )}
-    </div>
+      <ProductDetailClient params={params} />
+    </>
   );
 }

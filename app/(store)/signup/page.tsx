@@ -1,5 +1,14 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 import SignupPage from "./SignupPage";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Create Account",
+  description: "Create a Wear Floral account to order unique unstitched fabrics via WhatsApp.",
+  path: "/signup",
+  noIndex: true,
+});
 
 export default function Page() {
   return (

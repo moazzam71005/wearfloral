@@ -1,5 +1,14 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 import LoginPage from "./LoginPage";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Sign In",
+  description: "Sign in to Wear Floral to checkout on WhatsApp and track your orders.",
+  path: "/login",
+  noIndex: true,
+});
 
 export default function Page() {
   return (
