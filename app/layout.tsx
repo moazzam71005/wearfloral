@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | Wear Floral",
   },
   description:
-    "Shop premium desi women's clothing — lawn suits, kurtis, shalwar kameez, dupattas and accessories.",
+    "Shop premium unstitched clothes from top brands, Sapphire, Gul Ahmed, Khaadi, Maria B & more 💫",
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
