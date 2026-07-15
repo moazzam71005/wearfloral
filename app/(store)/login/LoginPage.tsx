@@ -51,7 +51,7 @@ export default function LoginPage() {
       </div>
       <h1 className="text-center text-2xl font-bold text-stone-900">Welcome Back</h1>
       <p className="mt-2 text-center text-sm text-stone-500">
-        Sign in with your verified email to place your order
+        Sign in to your account (optional — guests can checkout too)
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">

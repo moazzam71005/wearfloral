@@ -53,7 +53,7 @@ function mapDbOrder(row: Record<string, unknown>): Order {
   const items = (row.order_items as Record<string, unknown>[] | null) ?? [];
   return {
     id: row.id as string,
-    customerId: row.customer_id as string,
+    customerId: (row.customer_id as string | null) ?? null,
     customerName: row.customer_name as string,
     customerEmail: row.customer_email as string,
     customerPhone: row.customer_phone as string,
@@ -143,7 +143,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     const statsMap = new Map<string, { count: number; spent: number }>();
     (allOrders ?? []).forEach((o) => {
-      const cid = o.customer_id as string;
+      const cid = o.customer_id as string | null;
+      if (!cid) return;
       const current = statsMap.get(cid) ?? { count: 0, spent: 0 };
       if (o.status !== "Cancelled") {
         current.count += 1;
@@ -315,7 +316,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     ) => {
       const { error: orderErr } = await supabase.from("orders").insert({
         id: order.id,
-        customer_id: order.customerId,
+        customer_id: order.customerId || null,
         customer_name: order.customerName,
         customer_email: order.customerEmail,
         customer_phone: order.customerPhone,
@@ -356,7 +357,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         await refreshProducts();
       }
 
-      await refreshOrders();
+      // Guest users cannot list orders (RLS) — ignore refresh failures.
+      try {
+        await refreshOrders();
+      } catch {
+        /* no-op for guests */
+      }
     },
     [refreshProducts, refreshOrders]
   );

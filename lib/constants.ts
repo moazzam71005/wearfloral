@@ -6,7 +6,7 @@ export const STORE_PHONE = "+92 319 8555335";
 export const STORE_WHATSAPP_NUMBER = "+92 319 8555335";
 export const STORE_LOCATION = "Pakistan";
 export const CHECKOUT_NOTE =
-  "Orders are confirmed on WhatsApp. We’ll share payment details there — please send proof before we ship. Items stay available until we confirm your order.";
+  "No account needed. Enter your details, then order on WhatsApp — we’ll confirm availability and payment there before shipping.";
 
 export const BRANDS = [
   "Bareezé",

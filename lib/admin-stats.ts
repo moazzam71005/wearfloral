@@ -38,7 +38,9 @@ export function getDashboardStats(
   const totalRevenue = orderRevenue + offline.revenue;
   const totalProfit = orderProfit + offline.profit;
 
-  const uniqueCustomers = new Set(orders.map((o) => o.customerId)).size;
+  const uniqueCustomers = new Set(
+    orders.map((o) => o.customerId).filter((id): id is string => Boolean(id))
+  ).size;
   const availablePieces = products.filter((p) => !p.isSold).length;
 
   return {

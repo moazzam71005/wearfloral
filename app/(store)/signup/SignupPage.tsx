@@ -160,7 +160,7 @@ export default function SignupPage() {
       </div>
       <h1 className="text-center text-2xl font-bold text-stone-900">Create Account</h1>
       <p className="mt-2 text-center text-sm text-stone-500">
-        Sign up to checkout on WhatsApp and track orders
+        Optional — checkout works without an account
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -199,7 +199,7 @@ export default function SignupPage() {
           Create Account
         </Button>
         <p className="text-center text-xs text-stone-500">
-          After signup you&apos;ll need to verify your email before checkout.
+          Prefer a faster checkout? You can order as a guest — no signup needed.
         </p>
       </form>
 

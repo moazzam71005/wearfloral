@@ -5,7 +5,7 @@ import SignupPage from "./SignupPage";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Create Account",
-  description: "Create a Wear Floral account to order unique unstitched fabrics via WhatsApp.",
+  description: "Create a Wear Floral account (optional). You can also checkout as a guest via WhatsApp.",
   path: "/signup",
   noIndex: true,
 });

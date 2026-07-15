@@ -2,14 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CheckCircle, Loader2, MessageCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { useData } from "@/context/DataContext";
 import { CHECKOUT_NOTE } from "@/lib/constants";
-import { formatAuthError, isEmailVerified } from "@/lib/auth-errors";
 import { formatCurrency } from "@/lib/format";
 import { calcShippingFee } from "@/lib/shipping";
 import type { Order, OrderItem } from "@/lib/types";
@@ -21,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   validateAddress,
   validateCity,
+  validateEmail,
   validateName,
   validatePhone,
 } from "@/lib/validation";
@@ -28,8 +27,7 @@ import {
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const { placeOrder, allProducts } = useData();
-  const { isAuthenticated, isLoading, profile, user, signOut } = useCustomerAuth();
-  const router = useRouter();
+  const { profile, user } = useCustomerAuth();
 
   const [placed, setPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
@@ -39,41 +37,36 @@ export default function CheckoutPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: "",
+    email: "",
     phone: "",
     address: "",
     city: "",
   });
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace("/login?next=/checkout");
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
-    if (profile) {
-      setForm({
-        name: profile.name || "",
-        phone: profile.phone || "",
-        address: profile.address || "",
-        city: profile.city || "",
-      });
-    }
-  }, [profile]);
+    setForm((prev) => ({
+      name: profile?.name || prev.name,
+      email: user?.email || prev.email,
+      phone: profile?.phone || prev.phone,
+      address: profile?.address || prev.address,
+      city: profile?.city || prev.city,
+    }));
+  }, [profile, user]);
 
   const shipping = calcShippingFee(items.length);
   const total = subtotal + (items.length > 0 ? shipping : 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
 
     const errors: Record<string, string> = {};
     const nameErr = validateName(form.name);
+    const emailErr = validateEmail(form.email);
     const phoneErr = validatePhone(form.phone);
     const addrErr = validateAddress(form.address);
     const cityErr = validateCity(form.city);
     if (nameErr) errors.name = nameErr;
+    if (emailErr) errors.email = emailErr;
     if (phoneErr) errors.phone = phoneErr;
     if (addrErr) errors.address = addrErr;
     if (cityErr) errors.city = cityErr;
@@ -85,13 +78,6 @@ export default function CheckoutPage() {
     );
     if (soldInCart.length > 0) {
       setError("One or more items in your cart are no longer available.");
-      return;
-    }
-
-    if (!isEmailVerified(user)) {
-      setError(
-        "Please verify your email before checkout. Open the confirmation link we sent when you signed up, then sign in again."
-      );
       return;
     }
 
@@ -116,12 +102,12 @@ export default function CheckoutPage() {
 
       const order: Omit<Order, "createdAt" | "updatedAt"> = {
         id,
-        customerId: user.id,
-        customerName: form.name,
-        customerEmail: user.email ?? "",
-        customerPhone: form.phone,
-        shippingAddress: form.address,
-        city: form.city,
+        customerId: user?.id ?? null,
+        customerName: form.name.trim(),
+        customerEmail: form.email.trim(),
+        customerPhone: form.phone.trim(),
+        shippingAddress: form.address.trim(),
+        city: form.city.trim(),
         items: orderItems,
         subtotal,
         shipping,
@@ -129,7 +115,6 @@ export default function CheckoutPage() {
         status: "Pending",
       };
 
-      // Save as Pending — do not mark products sold until you confirm in admin.
       await placeOrder(order, { markSold: false });
 
       const url = buildWhatsAppOrderUrl({
@@ -145,10 +130,11 @@ export default function CheckoutPage() {
         subtotal,
         shipping,
         total,
-        customerName: form.name,
-        customerPhone: form.phone,
-        address: form.address,
-        city: form.city,
+        customerName: form.name.trim(),
+        customerEmail: form.email.trim(),
+        customerPhone: form.phone.trim(),
+        address: form.address.trim(),
+        city: form.city.trim(),
       });
 
       clearCart();
@@ -157,20 +143,11 @@ export default function CheckoutPage() {
       setPlaced(true);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      const raw = err instanceof Error ? err.message : "Failed to start WhatsApp order";
-      setError(formatAuthError(raw));
+      setError(err instanceof Error ? err.message : "Failed to start WhatsApp order");
     } finally {
       setSubmitting(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
-      </div>
-    );
-  }
 
   if (items.length === 0 && !placed) {
     return (
@@ -193,21 +170,17 @@ export default function CheckoutPage() {
           <span className="font-semibold text-stone-900">{orderId}</span>
         </p>
         <p className="mt-3 text-sm text-stone-500">
-          Complete the chat on WhatsApp so we can confirm availability and payment.
-          Your pieces stay reserved only after we confirm payment proof.
+          Finish the chat on WhatsApp so we can confirm availability and payment.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {whatsappUrl && (
-            <Button className="bg-[#25D366] hover:bg-[#1ebe57] text-white gap-2" asChild>
+            <Button className="gap-2 bg-[#25D366] text-white hover:bg-[#1ebe57]" asChild>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-4 w-4" />
                 Open WhatsApp again
               </a>
             </Button>
           )}
-          <Button variant="outline" asChild>
-            <Link href="/account">View my orders</Link>
-          </Button>
           <Button variant="outline" asChild>
             <Link href="/shop">Continue shopping</Link>
           </Button>
@@ -221,31 +194,23 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold text-stone-900">Checkout</h1>
       <p className="mt-2 max-w-2xl text-sm text-stone-500">{CHECKOUT_NOTE}</p>
 
-      {user && !isEmailVerified(user) && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p className="font-medium">Email not verified</p>
-          <p className="mt-1">
-            Please open the confirmation link sent to{" "}
-            <strong>{user.email}</strong>, then sign in again before ordering on WhatsApp.
-          </p>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="mt-8 grid gap-8 lg:grid-cols-2">
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold">Delivery Details</h2>
+            <h2 className="text-lg font-semibold">Your details</h2>
             <div className="mt-4 space-y-4">
               {[
-                { id: "name", label: "Full Name" },
-                { id: "phone", label: "Phone" },
-                { id: "address", label: "Address" },
-                { id: "city", label: "City" },
-              ].map(({ id, label }) => (
+                { id: "name", label: "Full Name", type: "text" },
+                { id: "email", label: "Email", type: "email" },
+                { id: "phone", label: "Phone", type: "tel" },
+                { id: "address", label: "Address", type: "text" },
+                { id: "city", label: "City", type: "text" },
+              ].map(({ id, label, type }) => (
                 <div key={id}>
                   <Label htmlFor={id}>{label}</Label>
                   <Input
                     id={id}
+                    type={type}
                     required
                     value={form[id as keyof typeof form]}
                     onChange={(e) =>
@@ -262,11 +227,11 @@ export default function CheckoutPage() {
           </div>
 
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-            <p className="text-sm font-medium text-emerald-900">How payment works</p>
+            <p className="text-sm font-medium text-emerald-900">How it works</p>
             <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm text-emerald-800">
-              <li>Tap Order on WhatsApp — your cart details are sent automatically.</li>
-              <li>We’ll confirm the pieces and share payment details (JazzCash / EasyPaisa / bank).</li>
-              <li>Send payment proof in the chat, then we ship your order.</li>
+              <li>Enter your details (no account needed).</li>
+              <li>Tap Order on WhatsApp — cart details go in the chat automatically.</li>
+              <li>We’ll confirm pieces and payment, then ship.</li>
             </ol>
           </div>
         </div>
@@ -277,7 +242,12 @@ export default function CheckoutPage() {
             {items.map((item) => (
               <div key={item.productId} className="flex gap-3">
                 <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded bg-stone-100">
-                  <Image src={item.imageUrl || "/placeholder-product.svg"} alt={item.name} fill className="object-cover" />
+                  <Image
+                    src={item.imageUrl || "/placeholder-product.svg"}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex-1 text-sm">
                   <p className="line-clamp-1 font-medium">{item.name}</p>
@@ -306,35 +276,9 @@ export default function CheckoutPage() {
           </div>
 
           {error && (
-            <div className="mt-4 space-y-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-              <p>{error}</p>
-              {(error.toLowerCase().includes("verify your email") ||
-                error.toLowerCase().includes("confirmed")) && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-red-200 bg-white text-red-700 hover:bg-red-50"
-                    asChild
-                  >
-                    <Link href="/login?next=/checkout">Sign in after verifying</Link>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-700"
-                    onClick={async () => {
-                      await signOut();
-                      router.push("/signup?next=/checkout");
-                    }}
-                  >
-                    Use a different account
-                  </Button>
-                </div>
-              )}
-            </div>
+            <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+              {error}
+            </p>
           )}
 
           <Button

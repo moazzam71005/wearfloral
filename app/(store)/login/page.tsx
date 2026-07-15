@@ -5,7 +5,7 @@ import LoginPage from "./LoginPage";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Sign In",
-  description: "Sign in to Wear Floral to checkout on WhatsApp and track your orders.",
+  description: "Sign in to Wear Floral (optional). Guests can checkout on WhatsApp without an account.",
   path: "/login",
   noIndex: true,
 });

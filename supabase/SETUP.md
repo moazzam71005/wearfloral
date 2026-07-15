@@ -10,9 +10,11 @@
 1. **SQL Editor** → New query → paste `supabase/migrations/001_schema.sql` → Run
 2. **SQL Editor** → New query → paste `supabase/migrations/002_revamp.sql` → Run
 3. **SQL Editor** → New query → paste `supabase/migrations/003_multi_images.sql` → Run
+4. **SQL Editor** → New query → paste `supabase/migrations/004_guest_checkout.sql` → Run
 
 > Migration 002 drops and recreates tables with the new unstitched-fabric schema.
 > Migration 003 adds multiple product images + thumbnail selection support.
+> Migration 004 enables guest WhatsApp checkout (no account / email verification required).
 
 ## 3. Add Admin User
 
@@ -41,7 +43,7 @@ Migration 002 creates the `product-images` bucket automatically. Verify in **Sto
 
 - Store: `npm run dev` → browse `/shop` (empty until admin adds products)
 - Admin: `/admin/login` with admin credentials
-- Customer: sign up at `/signup`, add items to cart, checkout at `/checkout`
+- Customer: add to cart → `/checkout` (guest details form) → WhatsApp. Account signup is optional.
 
 ## 7. Custom SMTP + branded confirmation email
 

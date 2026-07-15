@@ -9,6 +9,7 @@ export interface WhatsAppOrderDetails {
   shipping: number;
   total: number;
   customerName: string;
+  customerEmail: string;
   customerPhone: string;
   address: string;
   city: string;
@@ -41,6 +42,7 @@ export function buildWhatsAppOrderMessage(details: WhatsAppOrderDetails): string
     `Total: ${formatCurrency(details.total)}`,
     "",
     `Name: ${details.customerName}`,
+    `Email: ${details.customerEmail}`,
     `Phone: ${details.customerPhone}`,
     `Address: ${details.address}`,
     `City: ${details.city}`,

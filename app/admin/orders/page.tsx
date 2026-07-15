@@ -44,7 +44,7 @@ export default function AdminOrdersPage() {
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
         <p className="font-medium">WhatsApp orders</p>
         <p className="mt-1 text-emerald-800">
-          New checkouts arrive as <strong>Pending</strong> and do not mark pieces sold.
+          New checkouts arrive as <strong>Pending</strong> (often from guests — no account). They do not mark pieces sold.
           After payment proof on WhatsApp, set status to <strong>Processing</strong> (or Shipped / Delivered) — that marks the items sold out.
           Use <strong>Cancelled</strong> if you do not approve the order (no payment). Cancelled orders do not count as refunds, and the pieces go back on the shop.
         </p>
