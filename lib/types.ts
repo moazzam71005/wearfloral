@@ -132,3 +132,25 @@ export function getOfflineSaleRevenue(product: Product): number {
 export function getOfflineSaleProfit(product: Product): number {
   return calcProfit(product.discountPrice, product.purchasePrice);
 }
+
+export interface Review {
+  id: string;
+  customerName: string;
+  reviewText: string;
+  rating: number;
+  photoPath: string;
+  photoUrl: string;
+  productId: string | null;
+  productName?: string;
+  productBrand?: string;
+  isPublished: boolean;
+  createdAt: string;
+}
+
+export type ReviewInput = {
+  customerName: string;
+  reviewText: string;
+  rating: number;
+  productId?: string | null;
+  isPublished?: boolean;
+};

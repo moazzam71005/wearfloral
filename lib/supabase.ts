@@ -30,3 +30,11 @@ export function getProductImageUrl(imagePath: string): string {
   const { data } = client.storage.from("product-images").getPublicUrl(imagePath);
   return data.publicUrl;
 }
+
+export function getReviewImageUrl(imagePath: string): string {
+  if (!imagePath) return "";
+  if (imagePath.startsWith("http")) return imagePath;
+  const client = getSupabaseClient();
+  const { data } = client.storage.from("review-images").getPublicUrl(imagePath);
+  return data.publicUrl;
+}

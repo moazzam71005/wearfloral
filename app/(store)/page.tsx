@@ -3,13 +3,14 @@
 import { Loader2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Hero } from "@/components/store/Hero";
+import { ReviewsCarousel } from "@/components/store/ReviewsCarousel";
 import { BrandCards } from "@/components/store/BrandCards";
 import { ProductRow } from "@/components/store/ProductRow";
 import { Newsletter } from "@/components/store/Newsletter";
 import { BRANDS } from "@/lib/constants";
 
 export default function HomePage() {
-  const { products, isLoading } = useData();
+  const { products, reviews, isLoading } = useData();
 
   const brandsWithProducts = BRANDS.filter((brand) =>
     products.some((p) => p.brand === brand)
@@ -26,6 +27,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <ReviewsCarousel reviews={reviews} />
       <BrandCards products={products} />
       {brandsWithProducts.map((brand) => {
         const brandProducts = products.filter((p) => p.brand === brand);

@@ -10,8 +10,9 @@ import {
 } from "react";
 import { supabase } from "@/lib/supabase";
 import { mapDbProduct, productToDb } from "@/lib/db-mappers";
-import { PRODUCT_IMAGE_BUCKET } from "@/lib/constants";
+import { PRODUCT_IMAGE_BUCKET, REVIEW_IMAGE_BUCKET } from "@/lib/constants";
 import { sortProductsForDisplay } from "@/lib/products";
+import { getReviewImageUrl } from "@/lib/supabase";
 import type {
   CustomerWithStats,
   Order,
@@ -19,6 +20,8 @@ import type {
   OrderStatus,
   Product,
   ProductInput,
+  Review,
+  ReviewInput,
 } from "@/lib/types";
 
 interface DataContextValue {
@@ -26,11 +29,13 @@ interface DataContextValue {
   allProducts: Product[];
   orders: Order[];
   customers: CustomerWithStats[];
+  reviews: Review[];
   isLoading: boolean;
   error: string | null;
   refreshProducts: () => Promise<void>;
   refreshOrders: () => Promise<void>;
   refreshCustomers: () => Promise<void>;
+  refreshReviews: () => Promise<void>;
   addProduct: (data: ProductInput, imageFiles: File[]) => Promise<void>;
   updateProduct: (
     id: string,
@@ -45,6 +50,8 @@ interface DataContextValue {
     options?: { markSold?: boolean }
   ) => Promise<void>;
   fetchCustomerOrders: (customerId: string) => Promise<Order[]>;
+  addReview: (data: ReviewInput, photoFile?: File | null) => Promise<void>;
+  deleteReview: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -100,10 +107,43 @@ async function uploadProductImages(files: File[], productCode: string): Promise<
   return paths;
 }
 
+async function uploadReviewImage(file: File): Promise<string> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `review-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage
+    .from(REVIEW_IMAGE_BUCKET)
+    .upload(path, file, { upsert: true });
+  if (error) throw error;
+  return path;
+}
+
+function mapDbReview(
+  row: Record<string, unknown>,
+  productsById: Map<string, Product>
+): Review {
+  const productId = (row.product_id as string | null) ?? null;
+  const product = productId ? productsById.get(productId) : undefined;
+  const photoPath = (row.photo_path as string) ?? "";
+  return {
+    id: row.id as string,
+    customerName: row.customer_name as string,
+    reviewText: row.review_text as string,
+    rating: Number(row.rating),
+    photoPath,
+    photoUrl: getReviewImageUrl(photoPath),
+    productId,
+    productName: product?.name,
+    productBrand: product?.brand,
+    isPublished: Boolean(row.is_published),
+    createdAt: row.created_at as string,
+  };
+}
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<CustomerWithStats[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,6 +151,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     () => sortProductsForDisplay(allProducts),
     [allProducts]
   );
+
+  const productsById = useMemo(() => {
+    const map = new Map<string, Product>();
+    allProducts.forEach((p) => map.set(p.id, p));
+    return map;
+  }, [allProducts]);
 
   const refreshProducts = useCallback(async () => {
     const { data, error: err } = await supabase
@@ -121,6 +167,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setAllProducts((data ?? []).map(mapDbProduct));
   }, []);
 
+  const refreshReviews = useCallback(async () => {
+    const { data, error: err } = await supabase
+      .from("reviews")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (err) throw err;
+    setReviews(
+      (data ?? []).map((row) =>
+        mapDbReview(row as Record<string, unknown>, productsById)
+      )
+    );
+  }, [productsById]);
   const refreshOrders = useCallback(async () => {
     const { data, error: err } = await supabase
       .from("orders")
@@ -185,6 +243,44 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     load();
   }, [refreshProducts]);
 
+  useEffect(() => {
+    refreshReviews().catch(() => {
+      /* reviews table may not exist until migration 005 */
+    });
+  }, [refreshReviews]);
+
+  const addReview = useCallback(
+    async (data: ReviewInput, photoFile?: File | null) => {
+      let photoPath = "";
+      if (photoFile) {
+        photoPath = await uploadReviewImage(photoFile);
+      }
+      const { error: err } = await supabase.from("reviews").insert({
+        customer_name: data.customerName.trim(),
+        review_text: data.reviewText.trim(),
+        rating: data.rating,
+        photo_path: photoPath,
+        product_id: data.productId || null,
+        is_published: data.isPublished ?? true,
+      });
+      if (err) throw new Error(err.message);
+      await refreshReviews();
+    },
+    [refreshReviews]
+  );
+
+  const deleteReview = useCallback(
+    async (id: string) => {
+      const review = reviews.find((r) => r.id === id);
+      const { error: err } = await supabase.from("reviews").delete().eq("id", id);
+      if (err) throw new Error(err.message);
+      if (review?.photoPath) {
+        await supabase.storage.from(REVIEW_IMAGE_BUCKET).remove([review.photoPath]);
+      }
+      await refreshReviews();
+    },
+    [reviews, refreshReviews]
+  );
   const addProduct = useCallback(
     async (data: ProductInput, imageFiles: File[]) => {
       const uploadedPaths =
@@ -383,11 +479,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       allProducts,
       orders,
       customers,
+      reviews,
       isLoading,
       error,
       refreshProducts,
       refreshOrders,
       refreshCustomers,
+      refreshReviews,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -395,17 +493,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       updateOrderStatus,
       placeOrder,
       fetchCustomerOrders,
+      addReview,
+      deleteReview,
     }),
     [
       products,
       allProducts,
       orders,
       customers,
+      reviews,
       isLoading,
       error,
       refreshProducts,
       refreshOrders,
       refreshCustomers,
+      refreshReviews,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -413,6 +515,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       updateOrderStatus,
       placeOrder,
       fetchCustomerOrders,
+      addReview,
+      deleteReview,
     ]
   );
 

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   LayoutDashboard,
+  MessageSquareQuote,
   Package,
   ShoppingCart,
   Users,
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
   { href: "/admin/inventory", label: "Inventory", icon: Warehouse },
   { href: "/admin/users", label: "Customers", icon: Users },
   { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useState } from "react";
-import { ShoppingBag, Truck, Loader2 } from "lucide-react";
+import { ShoppingBag, Truck, Loader2, Star } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useCart } from "@/context/CartContext";
 import { getRelatedProducts } from "@/lib/filters";
@@ -20,7 +20,7 @@ export default function ProductDetailClient({
 }: {
   params: { id: string };
 }) {
-  const { products, allProducts, isLoading } = useData();
+  const { products, allProducts, reviews, isLoading } = useData();
   const { addItem, hasItem } = useCart();
   const product = allProducts.find((p) => p.id === params.id);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -40,6 +40,9 @@ export default function ProductDetailClient({
   const inCart = hasItem(product.id);
   const soldOut = product.isSold;
   const storefrontPrice = getStorefrontPrice(product);
+  const productReviews = reviews.filter(
+    (r) => r.isPublished && r.productId === product.id
+  );
 
   const handleAddToCart = () => {
     if (soldOut || inCart) return;
@@ -151,6 +154,58 @@ export default function ProductDetailClient({
           </div>
         </div>
       </div>
+
+      {productReviews.length > 0 && (
+        <section className="mt-16 border-t border-stone-100 pt-12">
+          <h2 className="text-2xl font-bold text-stone-900">Customer reviews</h2>
+          <p className="mt-1 text-sm text-stone-500">
+            Feedback from buyers of this piece
+          </p>
+          <div className="mt-8 space-y-6">
+            {productReviews.map((review) => (
+              <article
+                key={review.id}
+                className="flex gap-4 rounded-2xl border border-stone-100 bg-stone-50/80 p-4 sm:p-5"
+              >
+                {review.photoUrl ? (
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-stone-200">
+                    <Image
+                      src={review.photoUrl}
+                      alt={review.customerName}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-rose-100 text-lg font-semibold text-rose-500">
+                    {review.customerName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-stone-900">{review.customerName}</p>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${
+                            i < review.rating
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-stone-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-stone-600">
+                    {review.reviewText}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section className="mt-16">

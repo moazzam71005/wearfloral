@@ -34,3 +34,5 @@ export const NAV_LINKS = [
 ] as const;
 
 export const PRODUCT_IMAGE_BUCKET = "product-images";
+export const REVIEW_IMAGE_BUCKET = "review-images";
+
