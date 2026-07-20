@@ -227,11 +227,15 @@ export default function CheckoutPage() {
           </div>
 
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-            <p className="text-sm font-medium text-emerald-900">How it works</p>
-            <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm text-emerald-800">
+            <p className="text-sm font-medium text-emerald-900">Payment &amp; how it works</p>
+            <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-sm text-emerald-800">
               <li>Enter your details (no account needed).</li>
-              <li>Tap Order on WhatsApp — cart details go in the chat automatically.</li>
-              <li>We’ll confirm pieces and payment, then ship.</li>
+              <li>Tap Order on WhatsApp — your cart is sent in the chat.</li>
+              <li>
+                We share <strong>EasyPaisa</strong>, <strong>JazzCash</strong>, or{" "}
+                <strong>bank transfer</strong> account details on WhatsApp.
+              </li>
+              <li>Pay, send proof in the chat, then we ship your order.</li>
             </ol>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Hero } from "@/components/store/Hero";
+import { PaymentInfo } from "@/components/store/PaymentInfo";
 import { ReviewsCarousel } from "@/components/store/ReviewsCarousel";
 import { BrandCards } from "@/components/store/BrandCards";
 import { ProductRow } from "@/components/store/ProductRow";
@@ -27,6 +28,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <PaymentInfo />
       <ReviewsCarousel reviews={reviews} />
       <BrandCards products={products} />
       {brandsWithProducts.map((brand) => {

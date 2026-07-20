@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Menu, Search, ShoppingBag, User, X, LogOut } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
-import { NAV_LINKS, FREE_SHIPPING_MESSAGE } from "@/lib/constants";
+import { NAV_LINKS, FREE_SHIPPING_MESSAGE, PAYMENT_METHODS_LABEL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CartDrawer } from "./CartDrawer";
@@ -33,7 +33,7 @@ export function Navbar() {
   return (
     <>
       <div className="bg-rose-500 py-2 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
-        {FREE_SHIPPING_MESSAGE} &nbsp;·&nbsp; Premium unstitched fabrics
+        {FREE_SHIPPING_MESSAGE} &nbsp;·&nbsp; {PAYMENT_METHODS_LABEL}
       </div>
 
       <header className="sticky top-0 z-50 border-b border-stone-100 bg-white/95 backdrop-blur-md">

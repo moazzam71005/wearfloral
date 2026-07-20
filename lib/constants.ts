@@ -6,7 +6,13 @@ export const STORE_PHONE = "+92 319 8555335";
 export const STORE_WHATSAPP_NUMBER = "+92 319 8555335";
 export const STORE_LOCATION = "Pakistan";
 export const CHECKOUT_NOTE =
-  "No account needed. Enter your details, then order on WhatsApp — we’ll confirm availability and payment there before shipping.";
+  "No account needed. Enter your details, then order on WhatsApp. We’ll share EasyPaisa, JazzCash, or bank account details in the chat — pay there, send proof, and we ship.";
+
+export const PAYMENT_METHODS_LABEL =
+  "Pay via EasyPaisa, JazzCash, or bank transfer";
+
+export const PAYMENT_HOWITWORKS =
+  "After you tap Order on WhatsApp, we confirm your pieces and send the account number / payment details in the chat. Choose EasyPaisa, JazzCash, or bank transfer, send proof, then we ship.";
 
 export const BRANDS = [
   "Bareezé",
