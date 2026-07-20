@@ -4,13 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useState } from "react";
-import { ShoppingBag, Truck, Loader2, Star } from "lucide-react";
+import { ShoppingBag, Loader2, Star } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useCart } from "@/context/CartContext";
 import { getRelatedProducts } from "@/lib/filters";
 import { formatCurrency } from "@/lib/format";
 import { calcDiscountPercent, getStorefrontPrice } from "@/lib/types";
-import { FREE_SHIPPING_MESSAGE } from "@/lib/constants";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -146,11 +145,6 @@ export default function ProductDetailClient({
               <ShoppingBag className="h-5 w-5" />
               {soldOut ? "Sold Out" : inCart ? "In Cart" : "Add to Cart"}
             </Button>
-          </div>
-
-          <div className="mt-6 flex items-center gap-2 rounded-lg bg-stone-50 p-4 text-sm text-stone-600">
-            <Truck className="h-5 w-5 text-rose-400" />
-            {FREE_SHIPPING_MESSAGE}
           </div>
         </div>
       </div>

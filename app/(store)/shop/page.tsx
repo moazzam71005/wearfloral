@@ -6,7 +6,7 @@ import ShopPage from "./ShopPage";
 export const metadata: Metadata = buildPageMetadata({
   title: "Shop Unstitched Fabrics",
   description:
-    "Browse unique unstitched fabrics by brand — Sapphire, Gul Ahmed, Khaadi, Maria B, Bareezé and more. Premium one-of-a-kind pieces with free shipping on 3+ items.",
+    "Browse unique unstitched fabrics by brand — Sapphire, Gul Ahmed, Khaadi, Maria B, Bareezé and more. Premium one-of-a-kind pieces with WhatsApp checkout.",
   path: "/shop",
 });
 

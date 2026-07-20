@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/format";
-import { calcShippingFee, itemsUntilFreeShipping } from "@/lib/shipping";
+import { calcShippingFee } from "@/lib/shipping";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -72,14 +72,8 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-stone-500">Shipping</span>
-                <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
+                <span>{formatCurrency(shipping)}</span>
               </div>
-              {itemsUntilFreeShipping(items.length) > 0 && (
-                <p className="text-xs text-rose-500">
-                  Add {itemsUntilFreeShipping(items.length)} more item
-                  {itemsUntilFreeShipping(items.length) === 1 ? "" : "s"} for free shipping
-                </p>
-              )}
               <Separator />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>

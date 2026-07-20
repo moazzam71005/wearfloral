@@ -1,10 +1,7 @@
-import { FREE_SHIPPING_MIN_ITEMS, SHIPPING_FEE } from "./constants";
+import { SHIPPING_FEE } from "./constants";
 
+/** Flat shipping fee for any non-empty cart. */
 export function calcShippingFee(itemCount: number): number {
   if (itemCount <= 0) return 0;
-  return itemCount >= FREE_SHIPPING_MIN_ITEMS ? 0 : SHIPPING_FEE;
-}
-
-export function itemsUntilFreeShipping(itemCount: number): number {
-  return Math.max(0, FREE_SHIPPING_MIN_ITEMS - itemCount);
+  return SHIPPING_FEE;
 }
