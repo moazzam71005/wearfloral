@@ -12,11 +12,13 @@
 3. **SQL Editor** → New query → paste `supabase/migrations/003_multi_images.sql` → Run
 4. **SQL Editor** → New query → paste `supabase/migrations/004_guest_checkout.sql` → Run
 5. **SQL Editor** → New query → paste `supabase/migrations/005_reviews.sql` → Run
+6. **SQL Editor** → New query → paste `supabase/migrations/006_fix_guest_order_items.sql` → Run
 
 > Migration 002 drops and recreates tables with the new unstitched-fabric schema.
 > Migration 003 adds multiple product images + thumbnail selection support.
 > Migration 004 enables guest WhatsApp checkout (no account / email verification required).
 > Migration 005 adds customer reviews (admin-entered) shown on the homepage.
+> Migration 006 fixes guest checkout RLS so customers can save order line items.
 
 ## 3. Add Admin User
 
