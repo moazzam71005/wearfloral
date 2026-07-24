@@ -117,12 +117,9 @@ async function uploadReviewImage(file: File): Promise<string> {
   return path;
 }
 
-function mapDbReview(
-  row: Record<string, unknown>,
-  productsById: Map<string, Product>
-): Review {
+function mapDbReview(row: Record<string, unknown>): Review {
   const productId = (row.product_id as string | null) ?? null;
-  const product = productId ? productsById.get(productId) : undefined;
+  const linked = row.products as { name?: string; brand?: string } | null;
   const photoPath = (row.photo_path as string) ?? "";
   return {
     id: row.id as string,
@@ -132,8 +129,8 @@ function mapDbReview(
     photoPath,
     photoUrl: getReviewImageUrl(photoPath),
     productId,
-    productName: product?.name,
-    productBrand: product?.brand,
+    productName: linked?.name,
+    productBrand: linked?.brand,
     isPublished: Boolean(row.is_published),
     createdAt: row.created_at as string,
   };
@@ -152,12 +149,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [allProducts]
   );
 
-  const productsById = useMemo(() => {
-    const map = new Map<string, Product>();
-    allProducts.forEach((p) => map.set(p.id, p));
-    return map;
-  }, [allProducts]);
-
   const refreshProducts = useCallback(async () => {
     const { data, error: err } = await supabase
       .from("products")
@@ -170,15 +161,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const refreshReviews = useCallback(async () => {
     const { data, error: err } = await supabase
       .from("reviews")
-      .select("*")
+      .select("*, products(name, brand)")
       .order("created_at", { ascending: false });
     if (err) throw err;
-    setReviews(
-      (data ?? []).map((row) =>
-        mapDbReview(row as Record<string, unknown>, productsById)
-      )
-    );
-  }, [productsById]);
+    setReviews((data ?? []).map((row) => mapDbReview(row as Record<string, unknown>)));
+  }, []);
   const refreshOrders = useCallback(async () => {
     const { data, error: err } = await supabase
       .from("orders")
@@ -233,7 +220,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
-        await refreshProducts();
+        await Promise.all([
+          refreshProducts(),
+          refreshReviews().catch(() => {
+            /* reviews table may not exist until migration 005 */
+          }),
+        ]);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load data");
       } finally {
@@ -241,13 +233,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
     }
     load();
-  }, [refreshProducts]);
-
-  useEffect(() => {
-    refreshReviews().catch(() => {
-      /* reviews table may not exist until migration 005 */
-    });
-  }, [refreshReviews]);
+  }, [refreshProducts, refreshReviews]);
 
   const addReview = useCallback(
     async (data: ReviewInput, photoFile?: File | null) => {
