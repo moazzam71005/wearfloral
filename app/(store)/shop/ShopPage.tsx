@@ -72,10 +72,10 @@ export default function ShopPage() {
       .filter(Boolean);
 
     if (filters.category === "bedsheet") {
-      return [...new Set(fromProducts)].sort((a, b) => a.localeCompare(b));
+      return Array.from(new Set(fromProducts)).sort((a, b) => a.localeCompare(b));
     }
 
-    return [...new Set([...BRANDS, ...fromProducts])];
+    return Array.from(new Set([...BRANDS, ...fromProducts]));
   }, [products, filters.category]);
 
   const handleSortChange = useCallback((value: string | null) => {
