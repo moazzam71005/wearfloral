@@ -11,7 +11,7 @@ export function Footer() {
           <div>
             <Image src="/logo.png" alt="Wear Floral" width={280} height={112} className="h-20 w-auto object-contain" />
             <p className="mt-4 text-sm leading-relaxed text-stone-500">
-              Premium unstitched fabrics from renowned Pakistani brands.
+              Premium unstitched fabrics and King size bedsheets from renowned Pakistani brands.
             </p>
           </div>
 
@@ -31,7 +31,8 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold uppercase tracking-wider text-stone-900">Help</h4>
             <ul className="mt-4 space-y-2.5 text-sm text-stone-500">
-              <li><Link href="/shop" className="hover:text-rose-500">Shop</Link></li>
+              <li><Link href="/shop" className="hover:text-rose-500">Shop fabrics</Link></li>
+              <li><Link href="/shop?category=bedsheet" className="hover:text-rose-500">Bedsheets</Link></li>
               <li><Link href="/account" className="hover:text-rose-500">My Orders</Link></li>
               <li><Link href="/login" className="hover:text-rose-500">Sign In</Link></li>
             </ul>

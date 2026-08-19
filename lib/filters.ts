@@ -17,6 +17,10 @@ export function filterProducts(
     );
   }
 
+  if (filters.category && filters.category !== "all") {
+    result = result.filter((p) => p.category === filters.category);
+  }
+
   if (filters.brands.length > 0) {
     result = result.filter((p) => filters.brands.includes(p.brand));
   }
@@ -49,6 +53,7 @@ export function filterProducts(
 export const defaultFilters: ProductFilters = {
   search: "",
   brands: [],
+  category: "all",
   priceRange: [0, 50000],
   sort: "newest",
 };
@@ -59,6 +64,12 @@ export function getRelatedProducts(
   limit = 4
 ): Product[] {
   return products
-    .filter((p) => p.id !== product.id && p.brand === product.brand && !p.isSold)
+    .filter(
+      (p) =>
+        p.id !== product.id &&
+        p.category === product.category &&
+        !p.isSold &&
+        (product.category === "bedsheet" || p.brand === product.brand)
+    )
     .slice(0, limit);
 }

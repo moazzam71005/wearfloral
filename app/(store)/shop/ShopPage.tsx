@@ -6,8 +6,10 @@ import { SlidersHorizontal, Loader2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { ProductCard } from "@/components/store/ProductCard";
 import { FilterSidebar } from "@/components/store/FilterSidebar";
+import { BedsheetHighlights } from "@/components/store/BedsheetHighlights";
 import { defaultFilters, filterProducts } from "@/lib/filters";
 import type { ProductFilters, SortOption } from "@/lib/types";
+import { BRANDS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -34,10 +36,16 @@ export default function ShopPage() {
   useEffect(() => {
     const search = searchParams.get("search") || "";
     const brand = searchParams.get("brand");
+    const categoryParam = searchParams.get("category");
+    const category =
+      categoryParam === "bedsheet" || categoryParam === "fabric"
+        ? categoryParam
+        : "all";
     setFilters((prev) => ({
       ...prev,
       search,
       brands: brand ? [brand] : prev.brands,
+      category,
     }));
   }, [searchParams]);
 
@@ -52,6 +60,23 @@ export default function ShopPage() {
   );
 
   const hasMore = paginatedProducts.length < filteredProducts.length;
+
+  const brandOptions = useMemo(() => {
+    const fromProducts = products
+      .filter((p) => {
+        if (filters.category === "bedsheet") return p.category === "bedsheet";
+        if (filters.category === "fabric") return p.category !== "bedsheet";
+        return true;
+      })
+      .map((p) => p.brand.trim())
+      .filter(Boolean);
+
+    if (filters.category === "bedsheet") {
+      return [...new Set(fromProducts)].sort((a, b) => a.localeCompare(b));
+    }
+
+    return [...new Set([...BRANDS, ...fromProducts])];
+  }, [products, filters.category]);
 
   const handleSortChange = useCallback((value: string | null) => {
     if (!value) return;
@@ -70,16 +95,21 @@ export default function ShopPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-stone-900">Shop Fabrics</h1>
+        <h1 className="text-3xl font-bold text-stone-900">
+          {filters.category === "bedsheet" ? "Shop Bedsheets" : "Shop"}
+        </h1>
         <p className="mt-1 text-stone-500">
           {filteredProducts.length} piece{filteredProducts.length !== 1 ? "s" : ""} available
         </p>
+        {filters.category === "bedsheet" && (
+          <BedsheetHighlights className="mt-4" />
+        )}
       </div>
 
       <div className="flex gap-8">
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-24 rounded-xl border border-stone-200 p-5">
-            <FilterSidebar filters={filters} onChange={setFilters} />
+            <FilterSidebar filters={filters} onChange={setFilters} brands={brandOptions} />
           </div>
         </aside>
 
@@ -107,7 +137,7 @@ export default function ShopPage() {
 
           {filteredProducts.length === 0 ? (
             <div className="py-20 text-center">
-              <p className="text-stone-500">No fabrics match your filters.</p>
+              <p className="text-stone-500">No products match your filters.</p>
               <Button variant="outline" className="mt-4" onClick={() => setFilters(defaultFilters)}>
                 Clear Filters
               </Button>
@@ -141,6 +171,7 @@ export default function ShopPage() {
             onChange={setFilters}
             onClose={() => setMobileFiltersOpen(false)}
             isMobile
+            brands={brandOptions}
           />
         </SheetContent>
       </Sheet>

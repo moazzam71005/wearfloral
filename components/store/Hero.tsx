@@ -31,7 +31,7 @@ export function Hero() {
                 <span className="text-rose-500">Discounted </span> Prices
               </h1>
               <p className="mt-4 max-w-md text-base text-stone-500 sm:text-lg">
-                Discover unique unstitched pieces from Sapphire, Gul Ahmed, Khaadi, Nishat
+                Discover unique unstitched pieces and King size bedsheets from Sapphire, Gul Ahmed, Khaadi, Nishat
                 and more!
               </p>
             </div>
@@ -58,13 +58,13 @@ export function Hero() {
                 href="/shop"
                 className="rounded-xl bg-stone-900 px-6 py-3 text-sm font-semibold text-white hover:bg-stone-700"
               >
-                Shop All Fabrics
+                Shop Fabrics
               </Link>
               <Link
-                href="#brands"
+                href="/shop?category=bedsheet"
                 className="rounded-xl border-2 border-stone-900 px-6 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-900 hover:text-white"
               >
-                Browse Brands
+                Shop Bedsheets
               </Link>
             </div>
           </div>

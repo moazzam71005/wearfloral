@@ -63,6 +63,7 @@ export default function AdminProductsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>
+              <TableHead className="hidden sm:table-cell">Type</TableHead>
               <TableHead className="hidden md:table-cell">Brand</TableHead>
               <TableHead>Sale Price</TableHead>
               <TableHead className="hidden sm:table-cell">Cost</TableHead>
@@ -74,8 +75,8 @@ export default function AdminProductsPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-stone-500">
-                  No products yet. Add your first fabric piece.
+                <TableCell colSpan={8} className="text-center py-8 text-stone-500">
+                  No products yet. Add your first fabric piece or bedsheet.
                 </TableCell>
               </TableRow>
             ) : (
@@ -100,6 +101,9 @@ export default function AdminProductsPage() {
                         <p className="text-xs text-stone-500">{product.productCode}</p>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-stone-600">
+                    {product.category === "bedsheet" ? "Bedsheet" : "Fabric"}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{product.brand}</TableCell>
                   <TableCell>{formatCurrency(product.discountPrice)}</TableCell>

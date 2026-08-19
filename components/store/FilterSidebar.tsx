@@ -12,6 +12,7 @@ interface FilterSidebarProps {
   onChange: (filters: ProductFilters) => void;
   onClose?: () => void;
   isMobile?: boolean;
+  brands?: readonly string[];
 }
 
 export function FilterSidebar({
@@ -19,6 +20,7 @@ export function FilterSidebar({
   onChange,
   onClose,
   isMobile,
+  brands = BRANDS,
 }: FilterSidebarProps) {
   const toggleBrand = (brand: string) => {
     const brands = filters.brands.includes(brand)
@@ -31,6 +33,7 @@ export function FilterSidebar({
     onChange({
       search: filters.search,
       brands: [],
+      category: "all",
       priceRange: [0, 50000],
       sort: filters.sort,
     });
@@ -40,9 +43,33 @@ export function FilterSidebar({
   return (
     <div className="space-y-6">
       <div>
+        <h3 className="mb-3 text-sm font-semibold text-stone-900">Category</h3>
+        <div className="space-y-2">
+          {(
+            [
+              { value: "all" as const, label: "All" },
+              { value: "fabric" as const, label: "Unstitched fabrics" },
+              { value: "bedsheet" as const, label: "Bedsheets (King size)" },
+            ]
+          ).map((opt) => (
+            <label key={opt.value} className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="category"
+                className="accent-rose-500"
+                checked={filters.category === opt.value}
+                onChange={() => onChange({ ...filters, category: opt.value })}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
         <h3 className="mb-3 text-sm font-semibold text-stone-900">Brand</h3>
         <div className="space-y-2">
-          {BRANDS.map((brand) => (
+          {brands.map((brand) => (
             <div key={brand} className="flex items-center gap-2">
               <Checkbox
                 id={`brand-${brand}`}

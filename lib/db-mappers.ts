@@ -15,6 +15,7 @@ export interface DbProduct {
   discount_price: number;
   purchase_price: number;
   is_sold: boolean;
+  category?: string | null;
   created_at: string;
 }
 
@@ -51,6 +52,7 @@ export function mapDbProduct(row: DbProduct): Product {
     discountPrice: Number(row.discount_price),
     purchasePrice: Number(row.purchase_price),
     isSold: row.is_sold,
+    category: row.category === "bedsheet" ? "bedsheet" : "fabric",
     createdAt: row.created_at,
   };
 }
@@ -78,5 +80,6 @@ export function productToDb(
     discount_price: product.discountPrice,
     purchase_price: product.purchasePrice,
     is_sold: product.isSold ?? false,
+    category: product.category === "bedsheet" ? "bedsheet" : "fabric",
   };
 }

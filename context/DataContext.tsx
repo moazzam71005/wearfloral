@@ -324,6 +324,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         discountPrice: data.discountPrice ?? 0,
         purchasePrice: data.purchasePrice ?? 0,
         isSold: data.isSold ?? existingProduct?.isSold ?? false,
+        category: data.category ?? existingProduct?.category ?? "fabric",
       });
       const { error: err } = await supabase
         .from("products")

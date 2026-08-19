@@ -7,14 +7,18 @@ import { PaymentInfo } from "@/components/store/PaymentInfo";
 import { ReviewsCarousel } from "@/components/store/ReviewsCarousel";
 import { BrandCards } from "@/components/store/BrandCards";
 import { ProductRow } from "@/components/store/ProductRow";
+import { BedsheetHighlights } from "@/components/store/BedsheetHighlights";
 import { Newsletter } from "@/components/store/Newsletter";
 import { BRANDS } from "@/lib/constants";
 
 export default function HomePage() {
   const { products, reviews, isLoading } = useData();
 
+  const fabricProducts = products.filter((p) => p.category !== "bedsheet");
+  const bedsheetProducts = products.filter((p) => p.category === "bedsheet");
+
   const brandsWithProducts = BRANDS.filter((brand) =>
-    products.some((p) => p.brand === brand)
+    fabricProducts.some((p) => p.brand === brand)
   );
 
   if (isLoading) {
@@ -30,9 +34,18 @@ export default function HomePage() {
       <Hero />
       <PaymentInfo />
       <ReviewsCarousel reviews={reviews} />
-      <BrandCards products={products} />
+      <BrandCards products={fabricProducts} />
+      {bedsheetProducts.length > 0 && (
+        <ProductRow
+          title="Bedsheets"
+          label="King Size"
+          products={bedsheetProducts}
+          viewAllHref="/shop?category=bedsheet"
+          highlights={<BedsheetHighlights />}
+        />
+      )}
       {brandsWithProducts.map((brand) => {
-        const brandProducts = products.filter((p) => p.brand === brand);
+        const brandProducts = fabricProducts.filter((p) => p.brand === brand);
         if (brandProducts.length === 0) return null;
         return (
           <ProductRow
@@ -46,8 +59,8 @@ export default function HomePage() {
       })}
       {products.length === 0 && (
         <div className="py-20 text-center text-stone-500">
-          <p className="text-lg">New fabrics coming soon!</p>
-          <p className="mt-2 text-sm">Check back for our latest unstitched collections.</p>
+          <p className="text-lg">New pieces coming soon!</p>
+          <p className="mt-2 text-sm">Check back for unstitched fabrics and King size bedsheets.</p>
         </div>
       )}
       <Newsletter />

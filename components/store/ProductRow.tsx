@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { ProductCard } from "./ProductCard";
 import type { Product } from "@/lib/types";
 
@@ -11,9 +11,10 @@ interface ProductRowProps {
   label?: string;
   products: Product[];
   viewAllHref?: string;
+  highlights?: ReactNode;
 }
 
-export function ProductRow({ title, label, products, viewAllHref }: ProductRowProps) {
+export function ProductRow({ title, label, products, viewAllHref, highlights }: ProductRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: "left" | "right") => {
@@ -28,7 +29,7 @@ export function ProductRow({ title, label, products, viewAllHref }: ProductRowPr
   return (
     <section className="py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-end justify-between">
+        <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             {label && (
               <p className="text-xs font-semibold uppercase tracking-widest text-rose-500">
@@ -38,6 +39,7 @@ export function ProductRow({ title, label, products, viewAllHref }: ProductRowPr
             <h2 className="mt-1 font-heading text-3xl font-bold text-stone-900 sm:text-4xl">
               {title}
             </h2>
+            {highlights && <div className="mt-3">{highlights}</div>}
           </div>
           <div className="flex items-center gap-2">
             {viewAllHref && (

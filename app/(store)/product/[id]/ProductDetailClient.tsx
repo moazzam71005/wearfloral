@@ -11,6 +11,7 @@ import { getRelatedProducts } from "@/lib/filters";
 import { formatCurrency } from "@/lib/format";
 import { calcDiscountPercent, getStorefrontPrice } from "@/lib/types";
 import { ProductCard } from "@/components/store/ProductCard";
+import { BedsheetHighlights } from "@/components/store/BedsheetHighlights";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -113,6 +114,10 @@ export default function ProductDetailClient({
           <p className="mt-1 text-sm text-stone-500">ID: {product.productCode}</p>
           <p className="mt-1 text-sm font-medium text-stone-700">{product.volume}</p>
 
+          {product.category === "bedsheet" && (
+            <BedsheetHighlights className="mt-4" />
+          )}
+
           <div className="mt-4 flex items-center gap-3">
             <span className="text-2xl font-bold text-stone-900">
               {formatCurrency(storefrontPrice)}
@@ -203,7 +208,9 @@ export default function ProductDetailClient({
 
       {related.length > 0 && (
         <section className="mt-16">
-          <h2 className="text-2xl font-bold text-stone-900">More from {product.brand}</h2>
+          <h2 className="text-2xl font-bold text-stone-900">
+            {product.category === "bedsheet" ? "More King size bedsheets" : `More from ${product.brand}`}
+          </h2>
           <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />

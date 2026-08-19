@@ -21,6 +21,7 @@ export interface Product {
   discountPrice: number;
   purchasePrice: number;
   isSold: boolean;
+  category: "fabric" | "bedsheet";
   createdAt: string;
 }
 
@@ -101,6 +102,7 @@ export type SortOption = "newest" | "price-asc" | "price-desc";
 export interface ProductFilters {
   search: string;
   brands: string[];
+  category: "all" | "fabric" | "bedsheet";
   priceRange: [number, number];
   sort: SortOption;
 }

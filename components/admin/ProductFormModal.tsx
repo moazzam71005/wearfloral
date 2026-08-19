@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { calcDiscountPercent } from "@/lib/types";
-import { BRANDS } from "@/lib/constants";
+import { BRANDS, BEDSHEET_SIZE, PRODUCT_CATEGORIES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ interface ProductFormModalProps {
     imagePaths: string[];
     thumbnailIndex: number;
     isSold: boolean;
+    category: "fabric" | "bedsheet";
   }, imageFiles: File[]) => Promise<void>;
   onUpdate?: (
     id: string,
@@ -57,6 +58,7 @@ interface ProductFormModalProps {
       imagePaths: string[];
       thumbnailIndex: number;
       isSold: boolean;
+      category: "fabric" | "bedsheet";
     }>,
     imageFiles?: File[]
   ) => Promise<void>;
@@ -87,6 +89,7 @@ export function ProductFormModal({
     displayPrice: product?.displayPrice ?? 0,
     discountPrice: product?.discountPrice ?? 0,
     purchasePrice: product?.purchasePrice ?? 0,
+    category: product?.category ?? "fabric",
   });
 
   const discount = calcDiscountPercent(form.displayPrice, form.discountPrice);
@@ -108,6 +111,10 @@ export function ProductFormModal({
       setError("Product ID is required");
       return;
     }
+    if (!form.brand.trim()) {
+      setError("Brand is required");
+      return;
+    }
     if (form.discountPrice > form.displayPrice) {
       setError("Discount price cannot exceed display price");
       return;
@@ -117,7 +124,13 @@ export function ProductFormModal({
     try {
       const data = {
         ...form,
-        name: form.name || `${form.brand} - ${form.productCode}`,
+        brand: form.brand.trim(),
+        name:
+          form.name ||
+          (form.category === "bedsheet"
+            ? `${form.brand.trim()} King Size Bedsheet - ${form.productCode}`
+            : `${form.brand.trim()} - ${form.productCode}`),
+        volume: form.category === "bedsheet" ? BEDSHEET_SIZE : form.volume,
         imagePath: product?.imagePath ?? "",
         imagePaths: product?.imagePaths ?? [],
         thumbnailIndex,
@@ -232,26 +245,69 @@ export function ProductFormModal({
             />
           </div>
 
+          <div>
+            <Label>Type *</Label>
+            <Select
+              value={form.category}
+              onValueChange={(v) => {
+                if (v !== "fabric" && v !== "bedsheet") return;
+                const nextBrand =
+                  v === "bedsheet" && !product
+                    ? ""
+                    : v === "fabric" && !(BRANDS as readonly string[]).includes(form.brand)
+                      ? "Others"
+                      : form.brand;
+                setForm({
+                  ...form,
+                  category: v,
+                  brand: nextBrand,
+                  volume: v === "bedsheet" ? BEDSHEET_SIZE : form.volume === BEDSHEET_SIZE ? "" : form.volume,
+                });
+              }}
+            >
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PRODUCT_CATEGORIES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Brand *</Label>
-              <Select value={form.brand} onValueChange={(v) => v && setForm({ ...form, brand: v })}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {BRANDS.map((b) => (
-                    <SelectItem key={b} value={b}>{b}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {form.category === "bedsheet" ? (
+                <Input
+                  required
+                  value={form.brand}
+                  onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                  placeholder="Type the bedsheet brand"
+                  className="mt-1"
+                />
+              ) : (
+                <Select value={form.brand} onValueChange={(v) => v && setForm({ ...form, brand: v })}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BRANDS.map((b) => (
+                      <SelectItem key={b} value={b}>{b}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div>
-              <Label>Volume</Label>
-              <Input
-                value={form.volume}
-                onChange={(e) => setForm({ ...form, volume: e.target.value })}
-                placeholder="3-Piece Unstitched"
-                className="mt-1"
-              />
+              <Label>{form.category === "bedsheet" ? "Size" : "Volume"}</Label>
+              {form.category === "bedsheet" ? (
+                <Input value={BEDSHEET_SIZE} readOnly className="mt-1 bg-stone-50" />
+              ) : (
+                <Input
+                  value={form.volume}
+                  onChange={(e) => setForm({ ...form, volume: e.target.value })}
+                  placeholder="3-Piece Unstitched"
+                  className="mt-1"
+                />
+              )}
             </div>
           </div>
 

@@ -30,11 +30,28 @@ export const BRANDS = [
   "Others",
 ] as const;
 
+export const PRODUCT_CATEGORIES = [
+  { value: "fabric", label: "Unstitched fabric" },
+  { value: "bedsheet", label: "Bedsheet" },
+] as const;
+
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number]["value"];
+
+export const BEDSHEET_SIZE = "King Size";
+
+export const BEDSHEET_HIGHLIGHTS = [
+  "Export Quality",
+  "100% Pure Cotton",
+  "Durable",
+  "Branded",
+] as const;
+
 export const SHIPPING_FEE = 250;
 
 export const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
+  { href: "/shop?category=bedsheet", label: "Bedsheets" },
 ] as const;
 
 export const PRODUCT_IMAGE_BUCKET = "product-images";
